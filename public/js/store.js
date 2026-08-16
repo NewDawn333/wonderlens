@@ -18,6 +18,7 @@ const empty = () => ({
   parks: { dl: true, dca: true },
   shots: {},
   checkins: {},
+  rides: [],
   practice: false,
 });
 
@@ -25,7 +26,9 @@ export function loadState() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return empty();
-    return { ...empty(), ...JSON.parse(raw) };
+    const state = { ...empty(), ...JSON.parse(raw) };
+    if (!Array.isArray(state.rides)) state.rides = [];
+    return state;
   } catch {
     return empty();
   }
@@ -38,6 +41,7 @@ export function saveState(state) {
     parks: state.parks,
     shots: state.shots,
     checkins: state.checkins,
+    rides: Array.isArray(state.rides) ? state.rides : [],
     practice: state.practice,
   }));
 }

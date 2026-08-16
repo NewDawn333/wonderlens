@@ -592,3 +592,47 @@ export function enchantPrompt(spot, crew) {
     "Match the original photo's lighting, time of day, and camera angle. The result must still look like a real photograph the family took, with the extras composited naturally.",
   ].join(" ");
 }
+
+export const RIDE_EXTRAS =
+  "Warm golden-hour or twilight light through the windows, a soft cinematic glow on the seats, gentle lens flare, a few floating memory sparkles, and a painterly sky over the real road. Keep the real car, windows, landscape, and people unchanged.";
+
+export function rideHeading(kmFromPark) {
+  if (kmFromPark == null || Number.isNaN(kmFromPark)) return "On the road";
+  if (kmFromPark < 1.5) return "At the gates";
+  if (kmFromPark < 8) return "Leaving town";
+  return "On the road";
+}
+
+export function formatRidePlace(geo) {
+  if (!geo || typeof geo !== "object") return "";
+  const city = String(geo.city || "").trim();
+  const locality = String(geo.locality || "").trim();
+  const regionRaw = String(geo.principalSubdivisionCode || geo.principalSubdivision || "").trim();
+  const region = regionRaw.replace(/^[A-Z]{2}-/, "");
+  let town = locality || city;
+  if (locality && city && locality !== city) {
+    if (city.includes(locality) || /[-/]/.test(city)) town = locality;
+    else town = `${locality}, ${city}`;
+  }
+  if (town && region && !town.includes(region)) return `${town}, ${region}`;
+  return town;
+}
+
+export function formatCoords(lat, lng) {
+  if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) return "";
+  const ns = lat >= 0 ? "N" : "S";
+  const ew = lng >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(3)}°${ns}, ${Math.abs(lng).toFixed(3)}°${ew}`;
+}
+
+export function rideEnchantPrompt(place, crew) {
+  const names = crew.length ? crew.join(", ") : "this family";
+  const where = place || "the car on the road";
+  return [
+    `This is a real family photograph of ${names} taken during a car ride near ${where}.`,
+    "Keep every person exactly as they appear, including faces, ages, bodies, hair, clothing, poses, and expressions.",
+    "Do not replace, beautify, age-shift, cartoonify, or redraw any person. Do not add recognizable copyrighted mascots, logos, or wordmarks.",
+    `Only add photographic, family-friendly extras around them: ${RIDE_EXTRAS}`,
+    "Match the original photo's lighting, time of day, and camera angle. The result must still look like a real photograph the family took, with the extras composited naturally.",
+  ].join(" ");
+}

@@ -7,8 +7,12 @@ import {
   SPOTS,
   TRAIL,
   enchantPrompt,
+  formatCoords,
   formatDistance,
+  formatRidePlace,
   haversineM,
+  rideEnchantPrompt,
+  rideHeading,
 } from "./data.js";
 import {
   blobToDataUrl,
@@ -64,7 +68,48 @@ function enabledSpots() {
 }
 
 function spotById(id) {
-  return SPOTS.find((spot) => spot.id === id);
+  const parkSpot = SPOTS.find((spot) => spot.id === id);
+  if (parkSpot) return parkSpot;
+  const ride = rideList().find((item) => item.id === id);
+  return ride ? rideSpotFrom(ride) : null;
+}
+
+function rideList() {
+  return Array.isArray(state.rides) ? state.rides : [];
+}
+
+function isRide(spot) {
+  return Boolean(spot) && (spot.kind === "ride" || String(spot.id || "").startsWith("ride-"));
+}
+
+function rideSpotFrom(record) {
+  const place = record.place || record.heading || "On the road";
+  return {
+    id: record.id,
+    kind: "ride",
+    park: "ride",
+    land: "Car ride",
+    name: place,
+    short: "Ride",
+    stamp: record.stamp || "Road light",
+    mission: `Catch ${pairLabel()} in the car — window light, snacks, sleepy smiles, the stretch of road.`,
+    clue: [record.heading, record.place].filter(Boolean).join(" · ") || "Wherever you are on the drive.",
+    lat: record.lat ?? null,
+    lng: record.lng ?? null,
+    place: record.place || "",
+    heading: record.heading || "On the road",
+    at: record.at || Date.now(),
+    radiusM: 1e9,
+  };
+}
+
+function formatWhen(at) {
+  if (!at) return "";
+  try {
+    return new Date(at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  } catch {
+    return "";
+  }
 }
 
 function distanceTo(spot) {
@@ -94,6 +139,10 @@ function nextSpot() {
 
 function crewLabel() {
   return state.crew.length ? state.crew.join(" & ") : "the crew";
+}
+
+function pairLabel() {
+  return state.crew.length ? state.crew.join(" & ") : "the two of you";
 }
 
 function kmFromPark() {
@@ -285,6 +334,11 @@ function renderMap() {
           </button>`
         : `<div class="card"><h3>Album complete</h3><p class="muted">You hunted the whole map. Open the album and gloat a little.</p></div>`
     }
+    <button class="card next-card ride-card" id="start-ride">
+      <p class="kicker">Car ride</p>
+      <h3>Photos on the road</h3>
+      <p class="muted">Drive down or ride home. GPS notes the place. Imagine adds the extra light. The album keeps a history of ${pairLabel()}.</p>
+    </button>
     <div class="stack" style="margin-top:12px">
       ${enabledSpots()
         .filter((spot) => spot.park === park)
@@ -307,7 +361,7 @@ function renderMap() {
 
 function renderSpot() {
   const spot = activeSpot;
-  if (!spot) return renderMap();
+  if (!spot || isRide(spot)) return isRide(spot) ? renderShoot() : renderMap();
   const near = isNear(spot) || inPractice() || state.checkins[spot.id];
   return `<section class="view">
     <button class="back" data-go="map">← Map</button>
@@ -333,15 +387,28 @@ function renderSpot() {
 
 function renderShoot() {
   const spot = activeSpot;
+  if (!spot) return renderMap();
+  const ride = isRide(spot);
+  const placeLine = ride
+    ? [spot.heading, spot.place].filter(Boolean).join(" · ") || "GPS will note this stop"
+    : "";
   return `<section class="view">
-    <button class="back" data-spot="${spot.id}">← ${spot.short}</button>
-    <p class="kicker">${spot.land}</p>
-    <h2>Make the shot</h2>
-    <p class="muted">${spot.mission}</p>
+    <button class="back" ${ride ? `data-go="album"` : `data-spot="${spot.id}"`}>← ${ride ? "Album" : spot.short}</button>
+    <p class="kicker">${ride ? "Car ride" : spot.land}</p>
+    <h2>${ride ? "Shot for the road" : "Make the shot"}</h2>
+    <p class="muted">${
+      ride
+        ? `A page in the history of ${pairLabel()}. ${placeLine}.`
+        : spot.mission
+    }</p>
     <div class="camera-box" style="margin:14px 0">${
       draft.original
         ? `<img src="${draft.original}" alt="Captured photo">`
-        : `<div class="busy"><p class="muted">Take the shot here, or pick one you already took at this landmark.</p></div>`
+        : `<div class="busy"><p class="muted">${
+            ride
+              ? "Window light, back seat, a rest stop — wherever you are."
+              : "Take the shot here, or pick one you already took at this landmark."
+          }</p></div>`
     }</div>
     <div class="stack">
       ${isNative() ? `<button class="btn full" id="native-camera">Open camera</button>` : ""}
@@ -352,16 +419,23 @@ function renderShoot() {
         busy || "Enchant with Imagine"
       }</button>
     </div>
-    ${tabbar("map")}
+    ${tabbar(ride ? "album" : "map")}
   </section>`;
 }
 
 function renderResult() {
   const spot = activeSpot;
+  if (!spot) return renderAlbum();
+  const ride = isRide(spot);
+  const placeBits = [];
+  if (ride && spot.heading) placeBits.push(spot.heading);
+  if (ride && spot.place && spot.place !== spot.heading) placeBits.push(spot.place);
+  if (ride && spot.lat != null && spot.lng != null && !spot.place) placeBits.push(formatCoords(spot.lat, spot.lng));
   return `<section class="view">
     <button class="back" data-go="album">← Album</button>
-    <p class="kicker">${spot.stamp} stamp earned</p>
+    <p class="kicker">${ride ? "Road light" : `${spot.stamp} stamp earned`}</p>
     <h2>${spot.name}</h2>
+    ${ride && placeBits.length ? `<p class="muted">${placeBits.join(" · ")}</p>` : ""}
     <div class="camera-box compare" style="margin:14px 0; --split:${split}%">
       <img src="${draft.original}" alt="Original">
       <img class="after" src="${draft.enchanted}" alt="Enchanted">
@@ -379,14 +453,16 @@ function renderResult() {
 
 function renderAlbum() {
   const shots = enabledSpots().filter(isDone);
+  const rides = rideList().slice().sort((a, b) => (a.at || 0) - (b.at || 0));
+  const total = shots.length + rides.length;
   return `<section class="view">
     ${banner()}
     <div class="top">
       <div>
         <p class="kicker">Family album</p>
-        <h2>${shots.length ? "Today’s wonders" : "No stamps yet"}</h2>
+        <h2>${total ? "Today’s wonders" : "No stamps yet"}</h2>
       </div>
-      <div class="progress"><strong>${shots.length}</strong><span class="muted">saved</span></div>
+      <div class="progress"><strong>${total}</strong><span class="muted">saved</span></div>
     </div>
     ${
       shots.length
@@ -398,8 +474,31 @@ function renderAlbum() {
               </button>`
             )
             .join("")}</div>`
-        : `<div class="card empty">Hunt a landmark, take the photo, enchant it. The album lives on this phone.</div>`
+        : total
+          ? ""
+          : `<div class="card empty">Hunt a landmark or snap a car-ride photo, then enchant it. The album lives on this phone.</div>`
     }
+    <div class="album-block">
+      <p class="kicker">Car ride</p>
+      <h3>History of ${pairLabel()}</h3>
+      <p class="muted">GPS notes each stop on the drive down and the ride home.</p>
+      ${
+        rides.length
+          ? `<div class="album">${rides
+              .map((item) => {
+                const spot = rideSpotFrom(item);
+                const when = formatWhen(item.at);
+                return `<button class="shot" data-open="${spot.id}">
+                  <img data-photo="${spot.id}" alt="${spot.name}">
+                  <span>${spot.name}</span>
+                  <span class="place">${[spot.heading, when].filter(Boolean).join(" · ")}</span>
+                </button>`;
+              })
+              .join("")}</div>`
+          : `<div class="card empty">No road photos yet. Catch ${pairLabel()} in the car, at a rest stop, or pulling in.</div>`
+      }
+      <button class="btn full" id="start-ride" style="margin-top:12px">Add a car-ride photo</button>
+    </div>
     ${tabbar("album")}
   </section>`;
 }
@@ -519,6 +618,11 @@ function bind() {
   app.querySelectorAll("[data-spot]").forEach((el) =>
     el.addEventListener("click", () => {
       activeSpot = spotById(el.dataset.spot);
+      if (!activeSpot) return;
+      if (isRide(activeSpot)) {
+        setView("shoot");
+        return;
+      }
       setView("spot");
     })
   );
@@ -563,11 +667,13 @@ function bind() {
   );
   app.querySelectorAll("[data-shoot]").forEach((el) =>
     el.addEventListener("click", () => {
-      activeSpot = spotById(el.dataset.shoot);
+      const next = spotById(el.dataset.shoot);
+      if (next) activeSpot = next;
       draft = { original: "", enchanted: "", note: "" };
       setView("shoot");
     })
   );
+  app.querySelector("#start-ride")?.addEventListener("click", startRideShoot);
   app.querySelector("#photo-input")?.addEventListener("change", onPickPhoto);
   app.querySelector("#native-camera")?.addEventListener("click", nativeCamera);
   app.querySelector("#enchant")?.addEventListener("click", enchant);
@@ -580,6 +686,7 @@ function bind() {
   app.querySelectorAll("[data-open]").forEach((el) =>
     el.addEventListener("click", async () => {
       const spot = spotById(el.dataset.open);
+      if (!spot) return;
       activeSpot = spot;
       const original = await getPhoto(`${spot.id}-original`);
       const enchanted = await getPhoto(`${spot.id}-enchanted`);
@@ -618,8 +725,13 @@ function bind() {
       deletePhoto(`${id}-original`);
       deletePhoto(`${id}-enchanted`);
     });
+    rideList().forEach((item) => {
+      deletePhoto(`${item.id}-original`);
+      deletePhoto(`${item.id}-enchanted`);
+    });
     state.shots = {};
     state.checkins = {};
+    state.rides = [];
     persist();
     toast = { text: "Day reset. Go hunt again.", kind: "" };
     render();
@@ -635,11 +747,93 @@ function addCrew() {
   render();
 }
 
+async function lookupPlace(lat, lng) {
+  if (lat == null || lng == null) return "";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+      { signal: controller.signal }
+    );
+    if (!res.ok) throw new Error("geocode");
+    const label = formatRidePlace(await res.json());
+    if (label) return label;
+  } catch {
+    // Offline or blocked: keep coordinates.
+  } finally {
+    clearTimeout(timer);
+  }
+  return formatCoords(lat, lng);
+}
+
+async function refreshPosition() {
+  const Geo = nativePlugin("Geolocation");
+  try {
+    if (Geo) {
+      const current = await Geo.getCurrentPosition({ enableHighAccuracy: true, timeout: 8000 });
+      applyPosition(current);
+      return;
+    }
+  } catch {
+    // Keep the last watch position.
+  }
+  if (!navigator.geolocation) return;
+  await new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        applyPosition(pos);
+        resolve();
+      },
+      () => resolve(),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }
+    );
+  });
+}
+
+async function stampRideLocation() {
+  if (!isRide(activeSpot)) return;
+  await refreshPosition();
+  if (loc.lat == null) {
+    activeSpot.heading = rideHeading(null);
+    if (!activeSpot.place || activeSpot.place === "Finding this place…") {
+      activeSpot.place = "On the road";
+    }
+    activeSpot.name = activeSpot.place;
+    activeSpot.clue = activeSpot.heading;
+    return;
+  }
+  activeSpot.lat = loc.lat;
+  activeSpot.lng = loc.lng;
+  activeSpot.heading = rideHeading(kmFromPark());
+  activeSpot.place = await lookupPlace(loc.lat, loc.lng);
+  activeSpot.name = activeSpot.place || activeSpot.heading;
+  activeSpot.clue = [activeSpot.heading, activeSpot.place].filter(Boolean).join(" · ");
+}
+
+async function startRideShoot() {
+  toast = "";
+  activeSpot = rideSpotFrom({
+    id: `ride-${Date.now()}`,
+    heading: rideHeading(kmFromPark()),
+    stamp: "Road light",
+    at: Date.now(),
+    lat: loc.lat,
+    lng: loc.lng,
+    place: loc.lat != null ? "Finding this place…" : "On the road",
+  });
+  draft = { original: "", enchanted: "", note: "" };
+  setView("shoot");
+  await stampRideLocation();
+  if (view === "shoot" && isRide(activeSpot)) render();
+}
+
 async function onPickPhoto(event) {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
     draft.original = await compressImage(file);
+    if (isRide(activeSpot)) await stampRideLocation();
     render();
   } catch {
     toast = { text: "Could not read that photo.", kind: "bad" };
@@ -664,6 +858,7 @@ async function nativeCamera() {
     const src = photo.dataUrl || (photo.base64String ? `data:image/jpeg;base64,${photo.base64String}` : "");
     if (!src) throw new Error("No photo");
     draft.original = await compressImage(await (await fetch(src)).blob());
+    if (isRide(activeSpot)) await stampRideLocation();
     render();
   } catch (err) {
     if (String(err?.message || err).toLowerCase().includes("cancel")) return;
@@ -738,7 +933,9 @@ async function enchant() {
     if (loadApiKey()) {
       const data = await xai("/images/edits", {
         model: "grok-imagine-image-2.0",
-        prompt: enchantPrompt(activeSpot, state.crew),
+        prompt: isRide(activeSpot)
+          ? rideEnchantPrompt(activeSpot.place || activeSpot.heading, state.crew)
+          : enchantPrompt(activeSpot, state.crew),
         image: { url: draft.original, type: "image_url" },
         response_format: "b64_json",
       });
@@ -749,7 +946,9 @@ async function enchant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           image: draft.original,
-          prompt: enchantPrompt(activeSpot, state.crew),
+          prompt: isRide(activeSpot)
+            ? rideEnchantPrompt(activeSpot.place || activeSpot.heading, state.crew)
+            : enchantPrompt(activeSpot, state.crew),
           spotId: activeSpot.id,
         }),
       });
@@ -772,6 +971,26 @@ async function saveShot() {
   if (!activeSpot || !draft.enchanted) return;
   await putPhoto(`${activeSpot.id}-original`, dataUrlToBlob(draft.original));
   await putPhoto(`${activeSpot.id}-enchanted`, dataUrlToBlob(draft.enchanted));
+  if (isRide(activeSpot)) {
+    const record = {
+      id: activeSpot.id,
+      at: Date.now(),
+      lat: activeSpot.lat ?? loc.lat,
+      lng: activeSpot.lng ?? loc.lng,
+      place: activeSpot.place || "",
+      heading: activeSpot.heading || "On the road",
+      stamp: "Road light",
+    };
+    const rides = rideList();
+    const idx = rides.findIndex((item) => item.id === record.id);
+    if (idx >= 0) rides[idx] = record;
+    else rides.push(record);
+    state.rides = rides;
+    persist();
+    toast = { text: `${record.place || record.heading} saved to the ride album.`, kind: "" };
+    setView("album");
+    return;
+  }
   state.shots[activeSpot.id] = { at: Date.now(), stamp: activeSpot.stamp };
   persist();
   toast = { text: `${activeSpot.stamp} saved to the album.`, kind: "" };
