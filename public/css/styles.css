@@ -218,32 +218,120 @@ select { appearance: none; }
   overflow: hidden;
   border: 1px solid var(--line);
   background: #10192c;
-  min-height: 430px;
+  height: min(62vh, 560px);
+  min-height: 420px;
+  touch-action: none;
 }
-.map-art {
+#park-map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #10192c;
+}
+.leaflet-container {
+  height: 100%;
   width: 100%;
-  height: 460px;
-  display: block;
+  background: #10192c;
+  font-family: inherit;
 }
-.spot {
-  cursor: pointer;
+.leaflet-container img,
+.leaflet-tile {
+  max-width: none !important;
 }
-.spot circle.pulse {
-  fill: currentColor;
-  opacity: 0.22;
-  animation: pulse 2.4s ease-out infinite;
+.leaflet-control-zoom a {
+  background: rgba(10, 14, 26, 0.92) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 34px !important;
 }
-.spot.done circle.core { fill: var(--ok); }
-.spot.near circle.core { fill: var(--gold); }
-.spot .label {
-  font-family: Outfit, sans-serif;
-  font-size: 9px;
+.leaflet-control-zoom a:hover {
+  background: rgba(240, 195, 106, 0.18) !important;
+}
+.leaflet-control-attribution {
+  background: rgba(10, 14, 26, 0.72) !important;
+  color: var(--muted) !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a { color: var(--gold2); }
+.map-tools {
+  position: absolute;
+  left: 10px;
+  bottom: 28px;
+  z-index: 500;
+  display: flex;
+  gap: 8px;
+}
+.map-tool {
+  border: 1px solid var(--line);
+  background: rgba(10, 14, 26, 0.9);
+  color: var(--gold2);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.map-hint {
+  position: absolute;
+  left: 10px;
+  right: 52px;
+  top: 10px;
+  z-index: 400;
+  margin: 0;
+  pointer-events: none;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #eef3ff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.8);
+  max-width: 42ch;
+}
+.map-pin-wrap { background: none !important; border: 0 !important; }
+.map-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.55));
+}
+.map-pin-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--pin, var(--gold));
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 6px rgba(240, 195, 106, 0.28);
+}
+.map-pin.done .map-pin-dot { background: var(--ok); }
+.map-pin.near .map-pin-dot {
+  animation: pinpulse 2.2s ease-out infinite;
+}
+.map-pin-label {
+  font-size: 11px;
   font-weight: 700;
-  fill: #eef3ff;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(10, 14, 26, 0.82);
+  border: 1px solid rgba(240, 195, 106, 0.28);
+  white-space: nowrap;
 }
-@keyframes pulse {
-  0% { r: 8; opacity: 0.28; }
-  100% { r: 22; opacity: 0; }
+.map-you-wrap { background: none !important; border: 0 !important; }
+.map-you {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 3px;
+  border-radius: 50%;
+  background: var(--teal);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 6px rgba(62, 224, 198, 0.28);
+}
+@keyframes pinpulse {
+  0% { box-shadow: 0 0 0 4px rgba(240, 195, 106, 0.4); }
+  100% { box-shadow: 0 0 0 14px transparent; }
 }
 
 .park-switch { display: flex; gap: 8px; margin: 0 0 12px; }
