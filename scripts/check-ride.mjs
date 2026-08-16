@@ -1,10 +1,11 @@
+import fs from "node:fs";
 import {
   formatCoords,
   formatRidePlace,
   rideEnchantPrompt,
   rideHeading,
 } from "../public/js/data.js";
-import { loadState, saveState } from "../public/js/store.js";
+import { dataUrlToBlob, loadState, saveState } from "../public/js/store.js";
 
 const checks = [];
 function assert(name, ok, detail = "") {
@@ -87,6 +88,24 @@ const reloaded = loadState();
 assert("persists ride place", reloaded.rides[0]?.place === "Irvine, CA");
 assert("persists ride heading", reloaded.rides[0]?.heading === "On the road");
 assert("keeps crew", reloaded.crew.join(" & ") === "Maya & Sam");
+
+const pixel =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+const blob = dataUrlToBlob(pixel);
+assert("dataUrlToBlob type", blob.type.startsWith("image/"));
+assert("dataUrlToBlob size", blob.size > 0);
+let threw = false;
+try {
+  dataUrlToBlob("not-a-photo");
+} catch {
+  threw = true;
+}
+assert("dataUrlToBlob rejects junk", threw);
+
+const src = fs.readFileSync(new URL("../public/js/app.js", import.meta.url), "utf8");
+assert("save no longer requires enchanted", !/if \(!activeSpot \|\| !draft\.enchanted\) return;/.test(src));
+assert("save requires original", src.includes("if (!activeSpot || !draft.original) return false;"));
+assert("auto-save after capture", src.includes("await saveShot({ stay: true })"));
 
 const failed = checks.filter((item) => !item.ok);
 if (failed.length) {

@@ -96,6 +96,9 @@ export async function deletePhoto(id) {
 }
 
 export function dataUrlToBlob(dataUrl) {
+  if (!dataUrl || typeof dataUrl !== "string" || !dataUrl.includes(",")) {
+    throw new Error("That photo could not be saved.");
+  }
   const [head, data] = dataUrl.split(",");
   const mime = /data:(.*?);/.exec(head)?.[1] || "image/jpeg";
   const bytes = atob(data);
@@ -126,5 +129,6 @@ export async function compressImage(file, maxEdge = 1400, quality = 0.84) {
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  if (!blob) throw new Error("Could not process that photo.");
   return blobToDataUrl(blob);
 }

@@ -82,6 +82,12 @@ function isRide(spot) {
   return Boolean(spot) && (spot.kind === "ride" || String(spot.id || "").startsWith("ride-"));
 }
 
+function isShotSaved(spot) {
+  if (!spot) return false;
+  if (isRide(spot)) return rideList().some((item) => item.id === spot.id);
+  return Boolean(state.shots[spot.id]);
+}
+
 function rideSpotFrom(record) {
   const place = record.place || record.heading || "On the road";
   return {
@@ -413,8 +419,11 @@ function renderShoot() {
     <div class="stack">
       ${isNative() ? `<button class="btn full" id="native-camera">Open camera</button>` : ""}
       <label class="btn ${isNative() ? "ghost" : ""} full">Choose from camera roll
-        <input class="hidden-file" id="photo-input" type="file" accept="image/*" capture="environment">
+        <input class="hidden-file" id="photo-input" type="file" accept="image/*"${isNative() ? "" : " capture=\"environment\""}>
       </label>
+      <button class="btn full" id="save-shot" ${draft.original && !busy ? "" : "disabled"}>${
+        isShotSaved(spot) ? "See in album" : "Save to album"
+      }</button>
       <button class="btn ghost full" id="enchant" ${draft.original && !busy ? "" : "disabled"}>${
         busy || "Enchant with Imagine"
       }</button>
@@ -436,14 +445,21 @@ function renderResult() {
     <p class="kicker">${ride ? "Road light" : `${spot.stamp} stamp earned`}</p>
     <h2>${spot.name}</h2>
     ${ride && placeBits.length ? `<p class="muted">${placeBits.join(" · ")}</p>` : ""}
-    <div class="camera-box compare" style="margin:14px 0; --split:${split}%">
+    ${
+      draft.enchanted && draft.enchanted !== draft.original
+        ? `<div class="camera-box compare" style="margin:14px 0; --split:${split}%">
       <img src="${draft.original}" alt="Original">
       <img class="after" src="${draft.enchanted}" alt="Enchanted">
       <input id="split" type="range" min="0" max="100" value="${split}">
     </div>
-    <p class="muted">Slide to compare. Original stays yours. Enchanted is the souvenir.</p>
+    <p class="muted">Slide to compare. Original stays yours. Enchanted is the souvenir.</p>`
+        : `<div class="camera-box" style="margin:14px 0">
+      <img src="${draft.original}" alt="Saved photo">
+    </div>
+    <p class="muted">${isShotSaved(spot) ? "Saved in the album." : "This shot is ready for the album."}</p>`
+    }
     <div class="stack" style="margin-top:12px">
-      <button class="btn full" id="save-shot">Keep in album</button>
+      <button class="btn full" id="save-shot">${isShotSaved(spot) ? "See in album" : "Keep in album"}</button>
       <button class="btn ghost full" id="share-shot">Share</button>
       <button class="btn ghost full" data-shoot="${spot.id}">Try another take</button>
     </div>
@@ -476,7 +492,7 @@ function renderAlbum() {
             .join("")}</div>`
         : total
           ? ""
-          : `<div class="card empty">Hunt a landmark or snap a car-ride photo, then enchant it. The album lives on this phone.</div>`
+          : `<div class="card empty">Hunt a landmark or snap a car-ride photo. The album lives on this phone.</div>`
     }
     <div class="album-block">
       <p class="kicker">Car ride</p>
@@ -495,7 +511,7 @@ function renderAlbum() {
                 </button>`;
               })
               .join("")}</div>`
-          : `<div class="card empty">No road photos yet. Catch ${pairLabel()} in the car, at a rest stop, or pulling in.</div>`
+          : `<div class="card empty">No road photos yet. Take one and it saves here, even before Enchant.</div>`
       }
       <button class="btn full" id="start-ride" style="margin-top:12px">Add a car-ride photo</button>
     </div>
@@ -610,13 +626,19 @@ function render() {
 
 function bind() {
   app.querySelectorAll("[data-go]").forEach((el) =>
-    el.addEventListener("click", () => {
+    el.addEventListener("click", async () => {
       toast = "";
+      if (draft.original && (view === "shoot" || view === "result")) {
+        await saveShot({ stay: true, silent: true });
+      }
       setView(el.dataset.go);
     })
   );
   app.querySelectorAll("[data-spot]").forEach((el) =>
-    el.addEventListener("click", () => {
+    el.addEventListener("click", async () => {
+      if (draft.original && view === "shoot") {
+        await saveShot({ stay: true, silent: true });
+      }
       activeSpot = spotById(el.dataset.spot);
       if (!activeSpot) return;
       if (isRide(activeSpot)) {
@@ -667,6 +689,10 @@ function bind() {
   );
   app.querySelectorAll("[data-shoot]").forEach((el) =>
     el.addEventListener("click", () => {
+      if (isRide(activeSpot) && view === "result") {
+        startRideShoot();
+        return;
+      }
       const next = spotById(el.dataset.shoot);
       if (next) activeSpot = next;
       draft = { original: "", enchanted: "", note: "" };
@@ -825,7 +851,7 @@ async function startRideShoot() {
   draft = { original: "", enchanted: "", note: "" };
   setView("shoot");
   await stampRideLocation();
-  if (view === "shoot" && isRide(activeSpot)) render();
+  if (view === "shoot" && isRide(activeSpot) && !draft.original) render();
 }
 
 async function onPickPhoto(event) {
@@ -833,8 +859,9 @@ async function onPickPhoto(event) {
   if (!file) return;
   try {
     draft.original = await compressImage(file);
+    draft.enchanted = "";
     if (isRide(activeSpot)) await stampRideLocation();
-    render();
+    await saveShot({ stay: true });
   } catch {
     toast = { text: "Could not read that photo.", kind: "bad" };
     render();
@@ -855,11 +882,17 @@ async function nativeCamera() {
       correctOrientation: true,
       width: 1600,
     });
-    const src = photo.dataUrl || (photo.base64String ? `data:image/jpeg;base64,${photo.base64String}` : "");
+    const src =
+      photo.dataUrl ||
+      (photo.base64String ? `data:image/jpeg;base64,${photo.base64String}` : "") ||
+      photo.webPath ||
+      photo.path ||
+      "";
     if (!src) throw new Error("No photo");
     draft.original = await compressImage(await (await fetch(src)).blob());
+    draft.enchanted = "";
     if (isRide(activeSpot)) await stampRideLocation();
-    render();
+    await saveShot({ stay: true });
   } catch (err) {
     if (String(err?.message || err).toLowerCase().includes("cancel")) return;
     toast = { text: err.message || "Camera did not open.", kind: "bad" };
@@ -959,6 +992,7 @@ async function enchant() {
     if (!image) throw new Error("Imagine returned no image. Try again.");
     draft.enchanted = image;
     busy = "";
+    await saveShot({ stay: true });
     setView("result");
   } catch (err) {
     busy = "";
@@ -967,34 +1001,46 @@ async function enchant() {
   }
 }
 
-async function saveShot() {
-  if (!activeSpot || !draft.enchanted) return;
-  await putPhoto(`${activeSpot.id}-original`, dataUrlToBlob(draft.original));
-  await putPhoto(`${activeSpot.id}-enchanted`, dataUrlToBlob(draft.enchanted));
-  if (isRide(activeSpot)) {
-    const record = {
-      id: activeSpot.id,
-      at: Date.now(),
-      lat: activeSpot.lat ?? loc.lat,
-      lng: activeSpot.lng ?? loc.lng,
-      place: activeSpot.place || "",
-      heading: activeSpot.heading || "On the road",
-      stamp: "Road light",
-    };
-    const rides = rideList();
-    const idx = rides.findIndex((item) => item.id === record.id);
-    if (idx >= 0) rides[idx] = record;
-    else rides.push(record);
-    state.rides = rides;
+async function saveShot({ stay = false, silent = false } = {}) {
+  if (!activeSpot || !draft.original) return false;
+  try {
+    await putPhoto(`${activeSpot.id}-original`, dataUrlToBlob(draft.original));
+    if (draft.enchanted) {
+      await putPhoto(`${activeSpot.id}-enchanted`, dataUrlToBlob(draft.enchanted));
+    }
+    if (isRide(activeSpot)) {
+      const record = {
+        id: activeSpot.id,
+        at: Date.now(),
+        lat: activeSpot.lat ?? loc.lat,
+        lng: activeSpot.lng ?? loc.lng,
+        place: activeSpot.place || "",
+        heading: activeSpot.heading || "On the road",
+        stamp: "Road light",
+      };
+      const rides = rideList();
+      const idx = rides.findIndex((item) => item.id === record.id);
+      if (idx >= 0) rides[idx] = record;
+      else rides.push(record);
+      state.rides = rides;
+    } else {
+      state.shots[activeSpot.id] = { at: Date.now(), stamp: activeSpot.stamp };
+    }
     persist();
-    toast = { text: `${record.place || record.heading} saved to the ride album.`, kind: "" };
-    setView("album");
-    return;
+    if (!silent) {
+      const label = isRide(activeSpot)
+        ? activeSpot.place || activeSpot.heading || "Road light"
+        : activeSpot.stamp;
+      toast = { text: `${label} saved to the album.`, kind: "" };
+    }
+    if (stay) render();
+    else setView("album");
+    return true;
+  } catch (err) {
+    toast = { text: err.message || "Could not save that photo.", kind: "bad" };
+    render();
+    return false;
   }
-  state.shots[activeSpot.id] = { at: Date.now(), stamp: activeSpot.stamp };
-  persist();
-  toast = { text: `${activeSpot.stamp} saved to the album.`, kind: "" };
-  setView("album");
 }
 
 async function shareShot() {
