@@ -1,11 +1,15 @@
 import fs from "node:fs";
 import {
+  PARK_MAPS,
   RIDE_PRESETS,
+  SPOTS,
   cleanPolishedExtras,
   extrasForRideLook,
   formatCoords,
   formatRidePlace,
   gpsMovedEnough,
+  haversineM,
+  parkContains,
   polishRideIdeaPrompt,
   rideEnchantPrompt,
   rideHeading,
@@ -154,6 +158,41 @@ assert("polish button", src.includes('id="polish-prompt"'));
 assert("gps skip tiny moves", src.includes("gpsMovedEnough"));
 assert("restore map scroll", src.includes("keepScroll"));
 assert("polish uses grok", src.includes("polishRideIdeaPrompt"));
+assert("live park map mount", src.includes("mountParkMap"));
+assert("park map container", src.includes('id="park-map"'));
+assert("leaflet vendored js", fs.existsSync(new URL("../public/vendor/leaflet/leaflet.js", import.meta.url)));
+assert("leaflet vendored css", fs.existsSync(new URL("../public/vendor/leaflet/leaflet.css", import.meta.url)));
+assert("no schematic mapSvg", !src.includes("function mapSvg"));
+
+const dlSpots = SPOTS.filter((spot) => spot.park === "dl");
+const dcaSpots = SPOTS.filter((spot) => spot.park === "dca");
+assert("dl has fourteen hunts", dlSpots.length === 14);
+assert("dca has eight hunts", dcaSpots.length === 8);
+for (const spot of SPOTS) {
+  assert(`${spot.id} in ${spot.park} bounds`, parkContains(spot.park, spot));
+}
+assert("two park frames", Boolean(PARK_MAPS.dl && PARK_MAPS.dca));
+assert(
+  "castle on the real castle",
+  haversineM(
+    SPOTS.find((spot) => spot.id === "castle"),
+    { lat: 33.812806, lng: -117.918956 }
+  ) < 20
+);
+assert(
+  "space mountain on the real mountain",
+  haversineM(
+    SPOTS.find((spot) => spot.id === "space"),
+    { lat: 33.810969, lng: -117.917501 }
+  ) < 25
+);
+assert(
+  "grizzly on the rapids",
+  haversineM(
+    SPOTS.find((spot) => spot.id === "grizzly"),
+    { lat: 33.807193, lng: -117.920639 }
+  ) < 40
+);
 
 assert("normalize trims", normalizeApiKey("  xai-abcDEF123  ") === "xai-abcDEF123");
 assert("normalize bearer", normalizeApiKey("Bearer xai-abcDEF123") === "xai-abcDEF123");

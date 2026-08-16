@@ -34,6 +34,7 @@ import {
   saveApiKey,
   saveState,
 } from "./store.js";
+import { destroyParkMap, mountParkMap, parkMapHint, saveParkMapCamera, updateParkMapYou } from "./park-map.js";
 
 const GITHUB_REPO = "NewDawn333/wonderlens";
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
@@ -221,6 +222,17 @@ function tabbar(active) {
     .join("")}</nav>`;
 }
 
+function openSpot(id) {
+  const next = spotById(id);
+  if (!next) return;
+  activeSpot = next;
+  if (isRide(activeSpot)) {
+    setView("shoot");
+    return;
+  }
+  setView("spot");
+}
+
 function banner() {
   if (toast) return `<div class="banner ${toast.kind || ""}">${toast.text}</div>`;
   if (inPractice()) {
@@ -228,70 +240,6 @@ function banner() {
   }
   if (loc.err) return `<div class="banner warn">${loc.err}</div>`;
   return "";
-}
-
-function mapSvg() {
-  const spots = enabledSpots().filter((spot) => spot.park === park);
-  const you = projectYou();
-  const paths =
-    park === "dl"
-      ? `<path d="M50 96 L50 42" stroke="rgba(240,195,106,.35)" stroke-width="3.2" fill="none"/>
-         <path d="M50 42 C50 28 62 24 64 16" stroke="rgba(240,195,106,.22)" stroke-width="2" fill="none"/>
-         <path d="M50 58 C34 58 26 50 18 44" stroke="rgba(240,195,106,.22)" stroke-width="2" fill="none"/>
-         <ellipse cx="50" cy="42" rx="10" ry="6" fill="rgba(240,195,106,.08)" stroke="rgba(240,195,106,.2)"/>
-         <text x="50" y="94" text-anchor="middle" fill="#9aa6c3" font-size="4">Main Street</text>
-         <text x="72" y="58" fill="#9aa6c3" font-size="3.6">Tomorrow</text>
-         <text x="14" y="58" fill="#9aa6c3" font-size="3.6">Adventure</text>
-         <text x="16" y="16" fill="#9aa6c3" font-size="3.6">Galaxy</text>
-         <text x="50" y="28" text-anchor="middle" fill="#9aa6c3" font-size="3.6">Fantasy</text>`
-      : `<path d="M70 12 L48 30 L52 70 L30 80" stroke="rgba(240,195,106,.28)" stroke-width="2.4" fill="none"/>
-         <text x="68" y="14" fill="#9aa6c3" font-size="3.6">Entrance</text>
-         <text x="74" y="40" fill="#9aa6c3" font-size="3.6">Campus</text>
-         <text x="50" y="74" text-anchor="middle" fill="#9aa6c3" font-size="3.6">Cars</text>
-         <text x="22" y="82" fill="#9aa6c3" font-size="3.6">Pier</text>`;
-
-  return `<svg class="map-art" viewBox="0 0 100 100" role="img" aria-label="${PARKS[park].name} quest map">
-    <defs>
-      <radialGradient id="glow" cx="50%" cy="40%" r="60%">
-        <stop offset="0%" stop-color="#1a2744"/>
-        <stop offset="100%" stop-color="#0b1220"/>
-      </radialGradient>
-    </defs>
-    <rect width="100" height="100" fill="url(#glow)"/>
-    <path d="M8 12 C22 6 78 6 92 14 C96 40 94 86 50 94 C10 86 4 40 8 12Z" fill="rgba(62,224,198,0.05)" stroke="rgba(240,195,106,0.16)"/>
-    ${paths}
-    ${spots
-      .map((spot) => {
-        const near = isNear(spot) || inPractice();
-        const done = isDone(spot);
-        const cls = `spot ${done ? "done" : near ? "near" : ""}`;
-        return `<g class="${cls}" data-spot="${spot.id}" style="color:${spot.color}">
-          ${near && !done ? `<circle class="pulse" cx="${spot.x}" cy="${spot.y}" r="8"/>` : ""}
-          <circle cx="${spot.x}" cy="${spot.y}" r="7" fill="transparent"/>
-          <circle class="core" cx="${spot.x}" cy="${spot.y}" r="3.2" fill="${done ? "#6ee7b7" : spot.color}"/>
-          <text class="label" x="${spot.x}" y="${spot.y - 5}" text-anchor="middle">${spot.short}</text>
-        </g>`;
-      })
-      .join("")}
-    ${you ? `<circle class="you-dot" cx="${you.x}" cy="${you.y}" r="2.3"/>` : ""}
-  </svg>`;
-}
-
-function projectYou() {
-  if (loc.lat == null) return null;
-  const spots = enabledSpots().filter((spot) => spot.park === park);
-  if (!spots.length) return null;
-  let best = spots[0];
-  let bestD = distanceTo(best);
-  for (const spot of spots) {
-    const d = distanceTo(spot);
-    if (d < bestD) {
-      best = spot;
-      bestD = d;
-    }
-  }
-  if (bestD > 900) return null;
-  return { x: best.x, y: best.y + 4 };
 }
 
 function renderSplash() {
@@ -365,12 +313,19 @@ function renderMap() {
         )
         .join("")}
     </div>
+    <div class="map-shell">
+      <div id="park-map" role="application" aria-label="${PARKS[park].name} map"></div>
+      <div class="map-tools">
+        <button type="button" class="map-tool" data-map-recenter>My spot</button>
+        <button type="button" class="map-tool" data-map-layer>Map</button>
+      </div>
+      <p class="map-hint">${parkMapHint(park)}</p>
+    </div>
     <button class="card next-card ride-card" id="start-ride">
       <p class="kicker">Car ride</p>
       <h3>Photos on the road</h3>
       <p class="muted">Drive down or ride home. GPS notes the place. Enchant works anywhere — you do not need to be at the park.</p>
     </button>
-    <div class="map-shell">${mapSvg()}</div>
     ${
       nxt
         ? `<button class="card next-card" data-spot="${nxt.id}">
@@ -678,6 +633,8 @@ function render() {
   const scroller = document.querySelector(".view");
   const y = keepScroll && scroller ? scroller.scrollTop : 0;
   keepScroll = false;
+  saveParkMapCamera();
+  destroyParkMap();
   const screens = {
     splash: renderSplash,
     onboard: renderOnboard,
@@ -692,6 +649,18 @@ function render() {
   app.innerHTML = (screens[view] || renderMap)();
   bind();
   if (view === "album") hydrateAlbum();
+  if (view === "map") {
+    mountParkMap({
+      el: document.getElementById("park-map"),
+      park,
+      spots: enabledSpots().filter((spot) => spot.park === park),
+      loc,
+      onOpen: openSpot,
+      isNear,
+      isDone,
+      inPractice: inPractice(),
+    });
+  }
   if (y) {
     const next = document.querySelector(".view");
     if (next) next.scrollTop = y;
@@ -713,13 +682,7 @@ function bind() {
       if (draft.original && view === "shoot") {
         await saveShot({ stay: true, silent: true });
       }
-      activeSpot = spotById(el.dataset.spot);
-      if (!activeSpot) return;
-      if (isRide(activeSpot)) {
-        setView("shoot");
-        return;
-      }
-      setView("spot");
+      openSpot(el.dataset.spot);
     })
   );
   app.querySelectorAll("[data-show-park]").forEach((el) =>
@@ -1353,7 +1316,10 @@ function applyPosition(pos) {
   loc.lng = next.lng;
   loc.acc = pos.coords.accuracy;
   loc.err = "";
-  if (tiny) return;
+  if (tiny) {
+    updateParkMapYou(loc);
+    return;
+  }
   if (view === "map" || view === "spot") {
     keepScroll = true;
     render();
