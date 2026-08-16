@@ -1,3 +1,4 @@
+import { polishRideIdeaPrompt } from "./public/js/data.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -242,6 +243,26 @@ Give one ${kind} now. Rules:
       const text = extractText(data);
       if (!text) {
         sendJson(res, 502, { error: "Line Buddy is quiet. Try again." });
+        return;
+      }
+      sendJson(res, 200, { text });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/polish") {
+      const body = JSON.parse((await readBody(req)).toString("utf8") || "{}");
+      const idea = String(body.idea || "").trim();
+      if (!idea) {
+        sendJson(res, 400, { error: "Type a short idea first." });
+        return;
+      }
+      const data = await xai("/responses", {
+        model: MODEL_TEXT,
+        input: polishRideIdeaPrompt(idea),
+      });
+      const text = extractText(data);
+      if (!text) {
+        sendJson(res, 502, { error: "Grok returned an empty prompt. Try again." });
         return;
       }
       sendJson(res, 200, { text });

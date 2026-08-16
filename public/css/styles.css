@@ -23,7 +23,7 @@ body {
   min-height: 100dvh;
   overflow: hidden;
 }
-button, input { font: inherit; }
+button, input, textarea { font: inherit; }
 button { color: inherit; }
 img { max-width: 100%; display: block; }
 
@@ -125,7 +125,7 @@ h2 { font-size: 28px; }
 }
 
 label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
-input[type="text"], input[type="password"], select {
+input[type="text"], input[type="password"], select, textarea {
   width: 100%;
   border: 1px solid var(--line);
   background: rgba(255,255,255,0.04);
@@ -134,6 +134,7 @@ input[type="text"], input[type="password"], select {
   padding: 13px 14px;
   outline: none;
 }
+textarea { resize: vertical; min-height: 72px; line-height: 1.4; }
 select { appearance: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -146,11 +147,24 @@ select { appearance: none; }
   gap: 8px;
 }
 .chip b { font-weight: 600; }
+.chip.on {
+  border-color: rgba(240, 195, 106, 0.55);
+  background: rgba(240, 195, 106, 0.16);
+  color: var(--gold2);
+}
 .chip button {
   border: 0;
   background: transparent;
   color: var(--muted);
   padding: 0;
+}
+.ride-look { display: grid; gap: 10px; margin-top: 12px; }
+.ride-styles .chip { font-size: 13px; }
+.polished-preview {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed var(--line);
+  font-size: 12px;
 }
 
 .tabbar {

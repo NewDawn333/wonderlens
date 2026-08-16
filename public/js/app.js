@@ -11,8 +11,14 @@ import {
   formatDistance,
   formatRidePlace,
   haversineM,
+  RIDE_PRESETS,
+  cleanPolishedExtras,
+  extrasForRideLook,
+  gpsMovedEnough,
+  polishRideIdeaPrompt,
   rideEnchantPrompt,
   rideHeading,
+  ridePresetById,
 } from "./data.js";
 import {
   blobToDataUrl,
@@ -40,6 +46,8 @@ let view = state.onboarded ? "map" : "splash";
 let park = state.parks.dl ? "dl" : "dca";
 let activeSpot = null;
 let draft = { original: "", enchanted: "", note: "" };
+let rideLook = { style: "gold-dust", idea: "", polished: "" };
+let keepScroll = false;
 let split = 52;
 let game = { kind: null, index: 0, land: "Main Street" };
 let hasKey = Boolean(loadApiKey());
@@ -153,6 +161,29 @@ function crewLabel() {
 
 function pairLabel() {
   return state.crew.length ? state.crew.join(" & ") : "the two of you";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function syncRideLook() {
+  const el = app.querySelector("#ride-idea");
+  if (el) rideLook.idea = el.value;
+  return String(rideLook.idea || "").trim();
+}
+
+function rideStyleNote() {
+  if (rideLook.style === "custom") {
+    return rideLook.polished
+      ? "Using your polished prompt. Faces stay the same."
+      : "Your short idea is wrapped so faces stay the same.";
+  }
+  return ridePresetById(rideLook.style)?.blurb || "Pick a look for Enchant.";
 }
 
 function kmFromPark() {
@@ -412,6 +443,32 @@ function renderShoot() {
         ? `A page in the history of ${pairLabel()}. ${placeLine}. Enchant works on the road — no park GPS needed.`
         : spot.mission
     }</p>
+    ${
+      ride
+        ? `<div class="ride-look">
+        <p class="kicker">Enchant look</p>
+        <div class="chips ride-styles">
+          ${RIDE_PRESETS.map(
+            (item) =>
+              `<button type="button" class="chip ${rideLook.style === item.id ? "on" : ""}" data-ride-style="${item.id}">${escapeHtml(item.label)}</button>`
+          ).join("")}
+          <button type="button" class="chip ${rideLook.style === "custom" ? "on" : ""}" data-ride-style="custom">My idea</button>
+        </div>
+        <p class="muted" id="ride-style-note">${escapeHtml(rideStyleNote())}</p>
+        <label class="field">Short idea
+          <textarea id="ride-idea" rows="2" placeholder="e.g. glow on the windows, quiet night road">${escapeHtml(rideLook.idea || "")}</textarea>
+        </label>
+        <button class="btn ghost full" type="button" id="polish-prompt" ${busy === "Polishing…" ? "disabled" : ""}>${
+          busy === "Polishing…" ? "Polishing…" : "Turn this into a full prompt"
+        }</button>
+        ${
+          rideLook.style === "custom" && rideLook.polished
+            ? `<p class="muted polished-preview">${escapeHtml(rideLook.polished.slice(0, 180))}${rideLook.polished.length > 180 ? "…" : ""}</p>`
+            : ""
+        }
+      </div>`
+        : ""
+    }
     <div class="camera-box" style="margin:14px 0">${
       draft.original
         ? `<img src="${draft.original}" alt="Captured photo">`
@@ -618,6 +675,9 @@ function renderSettings() {
 }
 
 function render() {
+  const scroller = document.querySelector(".view");
+  const y = keepScroll && scroller ? scroller.scrollTop : 0;
+  keepScroll = false;
   const screens = {
     splash: renderSplash,
     onboard: renderOnboard,
@@ -632,6 +692,10 @@ function render() {
   app.innerHTML = (screens[view] || renderMap)();
   bind();
   if (view === "album") hydrateAlbum();
+  if (y) {
+    const next = document.querySelector(".view");
+    if (next) next.scrollTop = y;
+  }
 }
 
 function bind() {
@@ -710,6 +774,29 @@ function bind() {
     })
   );
   app.querySelector("#start-ride")?.addEventListener("click", startRideShoot);
+  app.querySelectorAll("[data-ride-style]").forEach((el) =>
+    el.addEventListener("click", () => {
+      syncRideLook();
+      rideLook.style = el.dataset.rideStyle;
+      render();
+    })
+  );
+  app.querySelector("#ride-idea")?.addEventListener("input", (event) => {
+    rideLook.idea = event.target.value;
+    if (rideLook.polished) {
+      rideLook.polished = "";
+      app.querySelector(".polished-preview")?.remove();
+    }
+    if (rideLook.idea.trim() && rideLook.style !== "custom") {
+      rideLook.style = "custom";
+      app.querySelectorAll("[data-ride-style]").forEach((btn) => {
+        btn.classList.toggle("on", btn.dataset.rideStyle === "custom");
+      });
+    }
+    const note = app.querySelector("#ride-style-note");
+    if (note) note.textContent = rideStyleNote();
+  });
+  app.querySelector("#polish-prompt")?.addEventListener("click", polishRidePrompt);
   app.querySelector("#photo-input")?.addEventListener("change", onPickPhoto);
   app.querySelector("#native-camera")?.addEventListener("click", nativeCamera);
   app.querySelector("#enchant")?.addEventListener("click", enchant);
@@ -850,6 +937,7 @@ async function stampRideLocation() {
 
 async function startRideShoot() {
   toast = "";
+  syncRideLook();
   activeSpot = rideSpotFrom({
     id: `ride-${Date.now()}`,
     heading: rideHeading(kmFromPark()),
@@ -1001,17 +1089,63 @@ async function enchantImage(prompt, original) {
   }
 }
 
+async function polishRidePrompt() {
+  const idea = syncRideLook();
+  if (!idea) {
+    toast = { text: "Type a short idea first.", kind: "bad" };
+    render();
+    return;
+  }
+  busy = "Polishing…";
+  toast = "";
+  render();
+  try {
+    let text = "";
+    if (loadApiKey()) {
+      const data = await xai("/responses", {
+        model: "grok-4.5",
+        input: polishRideIdeaPrompt(idea),
+      });
+      text = extractText(data);
+    } else {
+      const res = await fetch("/api/polish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not polish that idea.");
+      text = data.text;
+    }
+    const polished = cleanPolishedExtras(text);
+    if (!polished) throw new Error("Grok returned an empty prompt. Try again.");
+    rideLook.style = "custom";
+    rideLook.polished = polished;
+    busy = "";
+    toast = { text: "Full prompt is ready. Enchant when you like.", kind: "" };
+    render();
+  } catch (err) {
+    busy = "";
+    toast = { text: err.message || "Could not polish that idea.", kind: "bad" };
+    render();
+  }
+}
+
 async function enchant() {
   if (!activeSpot || !draft.original) return;
+  syncRideLook();
   busy = "Enchanting…";
   render();
   try {
+    const ridePrompt = rideEnchantPrompt(
+      activeSpot.place || activeSpot.heading,
+      state.crew,
+      extrasForRideLook(rideLook)
+    );
     let image = null;
     if (loadApiKey()) {
       image = await enchantImage(
-        isRide(activeSpot)
-          ? rideEnchantPrompt(activeSpot.place || activeSpot.heading, state.crew)
-          : enchantPrompt(activeSpot, state.crew),
+        isRide(activeSpot) ? ridePrompt : enchantPrompt(activeSpot, state.crew),
         draft.original
       );
     } else {
@@ -1020,9 +1154,7 @@ async function enchant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           image: draft.original,
-          prompt: isRide(activeSpot)
-            ? rideEnchantPrompt(activeSpot.place || activeSpot.heading, state.crew)
-            : enchantPrompt(activeSpot, state.crew),
+          prompt: isRide(activeSpot) ? ridePrompt : enchantPrompt(activeSpot, state.crew),
           spotId: activeSpot.id,
         }),
       });
@@ -1214,11 +1346,18 @@ async function testKey() {
 }
 
 function applyPosition(pos) {
-  loc.lat = pos.coords.latitude;
-  loc.lng = pos.coords.longitude;
+  const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  const prev = loc.lat != null ? { lat: loc.lat, lng: loc.lng } : null;
+  const tiny = prev && !gpsMovedEnough(prev, next);
+  loc.lat = next.lat;
+  loc.lng = next.lng;
   loc.acc = pos.coords.accuracy;
   loc.err = "";
-  if (view === "map" || view === "spot") render();
+  if (tiny) return;
+  if (view === "map" || view === "spot") {
+    keepScroll = true;
+    render();
+  }
 }
 
 async function startGeo() {
@@ -1238,7 +1377,10 @@ async function startGeo() {
     Geo.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
       if (err || !pos) {
         loc.err = "Location is off. Enable it, or tap We’re here at each landmark.";
-        if (view === "map") render();
+        if (view === "map") {
+          keepScroll = true;
+          render();
+        }
         return;
       }
       applyPosition(pos);
@@ -1253,7 +1395,10 @@ async function startGeo() {
     applyPosition,
     () => {
       loc.err = "Location is off. Enable it, or tap We’re here at each landmark.";
-      if (view === "map") render();
+      if (view === "map") {
+        keepScroll = true;
+        render();
+      }
     },
     { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
   );

@@ -596,6 +596,130 @@ export function enchantPrompt(spot, crew) {
 export const RIDE_EXTRAS =
   "Warm golden-hour or twilight light through the windows, a soft cinematic glow on the seats, gentle lens flare, a few floating memory sparkles, and a painterly sky over the real road. Keep the real car, windows, landscape, and people unchanged.";
 
+/** Simple chips in the app; extras go to Imagine. No official mascots or wordmarks. */
+export const RIDE_PRESETS = [
+  {
+    id: "gold-dust",
+    label: "Gold dust",
+    blurb: "Soft sparkle on the glass",
+    extras:
+      "Preserve every original face, age, skin tone, hair, glasses, freckles, expression, pose, and clothing exactly. Do not replace, beautify, or age anyone. Keep the same car interior, seats, belts, and window framing. Add only a faint gold dust sparkle caught in the window glass and a tiny warm lantern hanging from the rear-view mirror. Distant night sky may show a far-off castle silhouette. Photoreal, cinematic, warm tungsten light. No cartoons, no mascots, no logos, no text.",
+  },
+  {
+    id: "castle-light",
+    label: "Castle light",
+    blurb: "Warm glow on the horizon",
+    extras:
+      "Lock identity: same faces, same kids, same adults, same clothes, same car. Do not swap people. Through the windshield, add a distant storybook castle glowing gold on the night horizon, with a soft bloom of light on the dashboard. Keep reflections natural. Photoreal, not illustrated. No characters, no wordmarks, no fireworks overlay covering faces.",
+  },
+  {
+    id: "star-wish",
+    label: "Star wish",
+    blurb: "One bright star in the sky",
+    extras:
+      "Keep original faces and bodies pixel-faithful. Same hair, same expressions. Night sky outside the windows gets a single extra-bright wishing star and a thin trail of gold stardust along the glass, never across faces. Interior stays the real car. Photoreal family snapshot, gentle magic only. No mascots, no cartoons, no captions.",
+  },
+  {
+    id: "fireflies",
+    label: "Fireflies",
+    blurb: "Tiny lights in the dark",
+    extras:
+      "Do not alter faces, skin, or clothing. Same people, same seats. Add a handful of tiny warm firefly lights drifting just outside the windows and one or two reflections on the glass. Keep the cabin otherwise unchanged. Photoreal, quiet, dusk mood. No insects on skin, no characters, no logos.",
+  },
+  {
+    id: "vintage-lamps",
+    label: "Vintage lamps",
+    blurb: "Old-park lamp glow",
+    extras:
+      "Identity lock on every person and every face. Keep the real car interior. Outside, add a row of vintage park lamps with warm globes along a tree-lined path, as if the car is paused near an old main street at night. Soft tungsten spill on the dashboard only. Photoreal. No storefront names, no mascots, no cartoon style.",
+  },
+  {
+    id: "lanterns",
+    label: "Lanterns",
+    blurb: "Paper lanterns in the trees",
+    extras:
+      "Keep the same faces and outfits exactly. Through the side windows, hanging paper lanterns glow in dark trees — red, gold, and cream — with gentle bokeh. Do not paint lanterns over people. Car stays real. Photoreal night photograph. No festival logos, no characters, no text.",
+  },
+  {
+    id: "jungle-glow",
+    label: "Jungle glow",
+    blurb: "Green vines and warm lamps",
+    extras:
+      "Preserve faces and clothing. Same car. Outside the glass: dense tropical leaves, hanging vines, and a few warm expedition lanterns in the foliage, as if the road runs beside an adventure jungle at night. Subtle green bounce light only on metal, not on skin tones. Photoreal. No animals wearing clothes, no mascots, no ride vehicles.",
+  },
+  {
+    id: "starship-gleam",
+    label: "Starship gleam",
+    blurb: "Cool blue night chrome",
+    extras:
+      "Do not change anyone’s face or age. Keep the real interior. Add cool blue rim light on the window frames and a faint starfield plus distant chrome spires outside, like a tomorrow-city at night. Keep skin tones natural. Photoreal, sleek, not sci-fi CGI. No helmets on the kids, no logos, no characters.",
+  },
+  {
+    id: "bayou-night",
+    label: "Bayou night",
+    blurb: "Moss and river lanterns",
+    extras:
+      "Identity-preserving edit. Same people, same car. Through the windows: moonlit cypress, hanging moss, and a few lanterns on a dark river. Warm amber reflections on glass only. Photoreal Southern-night mood. No animals as characters, no boats with faces, no copyrighted figures.",
+  },
+  {
+    id: "snow-globe",
+    label: "Snow globe",
+    blurb: "Soft snow, warm cabin",
+    extras:
+      "Keep faces, hair, and clothes identical. Same car cabin, now with a hint of frost at the window corners and slow, sparse snowflakes outside. Interior stays cozy and warm. Do not add winter coats if they were not worn. Photoreal. No snowmen with faces, no mascots, no holiday logos.",
+  },
+  {
+    id: "sky-sparks",
+    label: "Sky sparks",
+    blurb: "Far-off night sparks",
+    extras:
+      "Do not retouch faces. Same family, same car. High in the distant sky, small gold and ruby sparks bloom like far-off night fireworks, never covering people. A little colored bounce on the hood or glass is ok. Photoreal photograph. No overlay stickers, no characters, no text in the sky.",
+  },
+  {
+    id: "moon-coach",
+    label: "Moon coach",
+    blurb: "Silver moonlight on the road",
+    extras:
+      "Lock every original face. Keep clothing and car exact. Add a huge silver moon low on the road ahead, a faint empty fairy-tale coach silhouette far in the mist, and a dusting of sparkle on the asphalt. Photoreal, dreamy, still a real family photo. No costumes added to anyone, no portraits of characters, no logos.",
+  },
+];
+
+export function gpsMovedEnough(prev, next, meters = 18) {
+  if (!prev || !next || prev.lat == null || next.lat == null) return true;
+  return haversineM(prev, next) >= meters;
+}
+
+export function ridePresetById(id) {
+  return RIDE_PRESETS.find((item) => item.id === id) || null;
+}
+
+export function extrasForRideLook(look) {
+  if (look?.style === "custom") {
+    return String(look.polished || look.idea || "").trim() || RIDE_EXTRAS;
+  }
+  return ridePresetById(look?.style)?.extras || RIDE_EXTRAS;
+}
+
+export function polishRideIdeaPrompt(idea) {
+  return `A parent typed this short idea for a family car-ride photo edit: ${JSON.stringify(String(idea || "").trim())}
+
+Rewrite it as ONE detailed Imagine extras paragraph (80-160 words) used to edit a real photograph.
+Rules:
+- Keep original faces, ages, bodies, hair, clothing, poses, and expressions unchanged
+- Do not replace, beautify, cartoonify, or age-shift anyone
+- No copyrighted character names, official mascots, logos, or wordmarks
+- Describe photographic, family-friendly magic around the real car, windows, and road
+- Photoreal, not illustrated
+- Return ONLY the extras paragraph, no quotes, labels, or markdown`;
+}
+
+export function cleanPolishedExtras(text) {
+  let out = String(text || "").trim();
+  out = out.replace(/^```(?:\w+)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  out = out.replace(/^["“]+|["”]+$/g, "").trim();
+  return out;
+}
+
 export function rideHeading(kmFromPark) {
   if (kmFromPark == null || Number.isNaN(kmFromPark)) return "On the road";
   if (kmFromPark < 1.5) return "At the gates";
@@ -628,14 +752,15 @@ export function formatCoords(lat, lng) {
   return `${Math.abs(lat).toFixed(3)}°${ns}, ${Math.abs(lng).toFixed(3)}°${ew}`;
 }
 
-export function rideEnchantPrompt(place, crew) {
+export function rideEnchantPrompt(place, crew, extras = RIDE_EXTRAS) {
   const names = crew.length ? crew.join(", ") : "this family";
   const where = place || "the car on the road";
+  const extra = String(extras || RIDE_EXTRAS).trim() || RIDE_EXTRAS;
   return [
     `This is a real family photograph of ${names} taken during a car ride near ${where}.`,
     "Keep every person exactly as they appear, including faces, ages, bodies, hair, clothing, poses, and expressions.",
     "Do not replace, beautify, age-shift, cartoonify, or redraw any person. Do not add recognizable copyrighted mascots, logos, or wordmarks.",
-    `Only add photographic, family-friendly extras around them: ${RIDE_EXTRAS}`,
+    `Only add photographic, family-friendly extras around them: ${extra}`,
     "Match the original photo's lighting, time of day, and camera angle. The result must still look like a real photograph the family took, with the extras composited naturally.",
   ].join(" ");
 }

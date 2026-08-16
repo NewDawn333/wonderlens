@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import {
+  RIDE_PRESETS,
+  cleanPolishedExtras,
+  extrasForRideLook,
   formatCoords,
   formatRidePlace,
+  gpsMovedEnough,
+  polishRideIdeaPrompt,
   rideEnchantPrompt,
   rideHeading,
 } from "../public/js/data.js";
@@ -66,6 +71,38 @@ assert("prompt place", prompt.includes("Irvine, CA"));
 assert("prompt no mascots", prompt.includes("Do not add recognizable copyrighted mascots"));
 assert("prompt keep people", prompt.includes("Keep every person exactly as they appear"));
 
+assert("twelve ride presets", RIDE_PRESETS.length === 12);
+const banned = /\b(mickey|minnie|disney|pixar|goofy|donald|tinker|elsa|frozen|marvel)\b/i;
+for (const item of RIDE_PRESETS) {
+  const blob = `${item.id} ${item.label} ${item.blurb} ${item.extras}`;
+  assert(`preset ${item.id} has label`, Boolean(item.label));
+  assert(`preset ${item.id} face lock`, /face/i.test(item.extras));
+  assert(`preset ${item.id} photoreal`, /photoreal/i.test(item.extras));
+  assert(`preset ${item.id} no marks`, !banned.test(blob));
+}
+assert(
+  "preset extras used",
+  rideEnchantPrompt("Irvine, CA", ["Maya"], RIDE_PRESETS[0].extras).includes("gold dust")
+);
+assert(
+  "custom look uses idea",
+  extrasForRideLook({ style: "custom", idea: "quiet moonlit road", polished: "" }).includes("quiet moonlit road")
+);
+assert(
+  "custom look prefers polished",
+  extrasForRideLook({ style: "custom", idea: "sparkles", polished: "Keep faces. Add window sparkle only." }).includes(
+    "window sparkle"
+  )
+);
+assert("named look uses extras", extrasForRideLook({ style: "fireflies" }).includes("firefly"));
+const polishAsk = polishRideIdeaPrompt("glow on the windows");
+assert("polish includes idea", polishAsk.includes("glow on the windows"));
+assert("polish bans mascots", /no copyrighted character names/i.test(polishAsk));
+assert("clean fences", cleanPolishedExtras("```\nKeep faces. Add lanterns.\n```") === "Keep faces. Add lanterns.");
+assert("gps missing prev", gpsMovedEnough(null, { lat: 33.64, lng: -117.84 }));
+assert("gps tiny stay", !gpsMovedEnough({ lat: 33.64, lng: -117.84 }, { lat: 33.64001, lng: -117.84 }));
+assert("gps far move", gpsMovedEnough({ lat: 33.64, lng: -117.84 }, { lat: 33.65, lng: -117.84 }));
+
 const fresh = loadState();
 assert("new state has rides array", Array.isArray(fresh.rides) && fresh.rides.length === 0);
 saveState({
@@ -111,6 +148,12 @@ assert("splash dropped shoot the kids", !/Shoot the kids/i.test(src));
 assert("key test button", src.includes("Test this key"));
 assert("key test hits api-key", src.includes('"/api-key"'));
 assert("ride enchant anywhere", src.includes("no park GPS needed") || src.includes("you do not need to be at the park"));
+assert("ride style chips", src.includes("data-ride-style"));
+assert("custom idea box", src.includes('id="ride-idea"'));
+assert("polish button", src.includes('id="polish-prompt"'));
+assert("gps skip tiny moves", src.includes("gpsMovedEnough"));
+assert("restore map scroll", src.includes("keepScroll"));
+assert("polish uses grok", src.includes("polishRideIdeaPrompt"));
 
 assert("normalize trims", normalizeApiKey("  xai-abcDEF123  ") === "xai-abcDEF123");
 assert("normalize bearer", normalizeApiKey("Bearer xai-abcDEF123") === "xai-abcDEF123");
