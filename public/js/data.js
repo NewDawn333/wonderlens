@@ -605,15 +605,18 @@ export function rideHeading(kmFromPark) {
 
 export function formatRidePlace(geo) {
   if (!geo || typeof geo !== "object") return "";
-  const city = String(geo.city || "").trim();
-  const locality = String(geo.locality || "").trim();
+  const admins = Array.isArray(geo.localityInfo?.administrative) ? geo.localityInfo.administrative : [];
+  const cityAdmin = admins.find((item) => Number(item.adminLevel) === 8);
   const regionRaw = String(geo.principalSubdivisionCode || geo.principalSubdivision || "").trim();
   const region = regionRaw.replace(/^[A-Z]{2}-/, "");
-  let town = locality || city;
-  if (locality && city && locality !== city) {
-    if (city.includes(locality) || /[-/]/.test(city)) town = locality;
-    else town = `${locality}, ${city}`;
-  }
+  const locality = String(geo.locality || "").trim();
+  const city = String(geo.city || "").trim();
+  const bulky = (name) => Boolean(name) && (/[-/]/.test(name) || /coast|metro|area/i.test(name));
+  const town =
+    String(cityAdmin?.name || "").trim() ||
+    locality ||
+    (!bulky(city) && city) ||
+    city.split(/[-/]/)[0].trim();
   if (town && region && !town.includes(region)) return `${town}, ${region}`;
   return town;
 }

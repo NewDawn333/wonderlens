@@ -324,6 +324,11 @@ function renderMap() {
         )
         .join("")}
     </div>
+    <button class="card next-card ride-card" id="start-ride">
+      <p class="kicker">Car ride</p>
+      <h3>Photos on the road</h3>
+      <p class="muted">Drive down or ride home. GPS notes the place. The album keeps a history of ${pairLabel()}.</p>
+    </button>
     <div class="map-shell">${mapSvg()}</div>
     ${
       nxt
@@ -334,11 +339,6 @@ function renderMap() {
           </button>`
         : `<div class="card"><h3>Album complete</h3><p class="muted">You hunted the whole map. Open the album and gloat a little.</p></div>`
     }
-    <button class="card next-card ride-card" id="start-ride">
-      <p class="kicker">Car ride</p>
-      <h3>Photos on the road</h3>
-      <p class="muted">Drive down or ride home. GPS notes the place. Imagine adds the extra light. The album keeps a history of ${pairLabel()}.</p>
-    </button>
     <div class="stack" style="margin-top:12px">
       ${enabledSpots()
         .filter((spot) => spot.park === park)

@@ -40,9 +40,21 @@ assert(
   }) === "Anaheim, CA"
 );
 assert(
-  "neighborhood + city",
-  formatRidePlace({ city: "Anaheim", locality: "Resort District", principalSubdivisionCode: "US-CA" }) ===
-    "Resort District, Anaheim, CA"
+  "admin city beats region",
+  formatRidePlace({
+    city: "Central Coast",
+    locality: "Irvine",
+    principalSubdivisionCode: "US-CA",
+    localityInfo: { administrative: [{ name: "Irvine", adminLevel: 8 }] },
+  }) === "Irvine, CA"
+);
+assert(
+  "locality beats bulky city",
+  formatRidePlace({
+    city: "Central Coast",
+    locality: "Irvine",
+    principalSubdivisionCode: "US-CA",
+  }) === "Irvine, CA"
 );
 assert("empty geo", formatRidePlace({}) === "");
 assert("coords", formatCoords(33.8097, -117.919) === "33.810°N, 117.919°W");
