@@ -18,6 +18,15 @@ import {
   rideHeading,
 } from "../public/js/data.js";
 import { dataUrlToBlob, loadState, maskedApiKey, normalizeApiKey, saveApiKey, saveState } from "../public/js/store.js";
+import {
+  APP_NEWS,
+  briefReleaseNotes,
+  formatReleaseDate,
+  installedBuildLabel,
+  installedVsLatest,
+  latestBuildLabel,
+  parseAppVersion,
+} from "../public/js/news.js";
 
 const checks = [];
 function assert(name, ok, detail = "") {
@@ -190,6 +199,10 @@ assert("park map container", src.includes('id="park-map"'));
 assert("leaflet vendored js", fs.existsSync(new URL("../public/vendor/leaflet/leaflet.js", import.meta.url)));
 assert("leaflet vendored css", fs.existsSync(new URL("../public/vendor/leaflet/leaflet.css", import.meta.url)));
 assert("no schematic mapSvg", !src.includes("function mapSvg"));
+assert("setup this phone card", src.includes("This phone"));
+assert("setup newest github card", src.includes("Newest GitHub build"));
+assert("setup loads latest on boot", src.includes("void loadLatestRelease()"));
+assert("setup news list", src.includes("APP_NEWS"));
 
 const dlSpots = SPOTS.filter((spot) => spot.park === "dl");
 const dcaSpots = SPOTS.filter((spot) => spot.park === "dca");
@@ -233,6 +246,42 @@ assert("normalize bearer", normalizeApiKey("Bearer xai-abcDEF123") === "xai-abcD
 assert("normalize env line", normalizeApiKey("XAI_API_KEY=xai-abcDEF123") === "xai-abcDEF123");
 saveApiKey("xai-testkey9999");
 assert("masked key", maskedApiKey() === "xai-…9999");
+
+assert("parse version from release name", parseAppVersion("Wonderlens 1.0.7")?.join(".") === "1.0.7");
+assert("parse version ignores junk", parseAppVersion("web") === null);
+assert("release date utc", formatReleaseDate("2026-08-16T22:20:14Z") === "Aug 16, 2026");
+const sampleNotes = briefReleaseNotes(`Sideload \`wonderlens.apk\` over the existing Wonderlens install. Same signing key, so you do not uninstall.
+
+1. Download the APK below in Chrome
+2. Open the download and Install
+3. Allow Chrome to install unknown apps if Android asks
+
+## What's Changed
+* Send every photo back to opening day, 1955 by @NewDawn333 in https://github.com/NewDawn333/wonderlens/pull/4
+
+**Full Changelog**: https://github.com/NewDawn333/wonderlens/compare/build-6...build-7`);
+assert("notes skip sideload", !sampleNotes.some((item) => /sideload|download the apk/i.test(item)));
+assert("notes keep pr title", sampleNotes.some((item) => /opening day, 1955/i.test(item)));
+assert(
+  "phone on latest",
+  installedVsLatest({ version: "1.0.7", build: "17" }, { name: "Wonderlens 1.0.7", tag_name: "build-7" }) === "latest"
+);
+assert(
+  "phone behind latest",
+  installedVsLatest({ version: "1.0.6", build: "16" }, { name: "Wonderlens 1.0.7", tag_name: "build-7" }) === "behind"
+);
+assert("web vs latest unknown", installedVsLatest({ version: "web", build: "0" }, { name: "Wonderlens 1.0.7" }) === "unknown");
+assert("installed web label", installedBuildLabel({ version: "web", build: "0" }, false).title === "Web preview");
+assert("installed apk label", installedBuildLabel({ version: "1.0.7", build: "17" }, true).title === "Wonderlens 1.0.7");
+assert(
+  "latest label uses name",
+  latestBuildLabel({ name: "Wonderlens 1.0.7", tag_name: "build-7", published_at: "2026-08-16T22:20:14Z", body: "" }).title ===
+    "Wonderlens 1.0.7"
+);
+assert("app news has items", APP_NEWS.length >= 3);
+assert("app news no disney marks", !/\b(mickey|minnie|disney|pixar)\b/i.test(APP_NEWS.join(" ")));
+const workflow = fs.readFileSync(new URL("../.github/workflows/android-release.yml", import.meta.url), "utf8");
+assert("release notes from app news", workflow.includes("APP_NEWS") && workflow.includes("body_path: release-body.md"));
 
 const failed = checks.filter((item) => !item.ok);
 if (failed.length) {
