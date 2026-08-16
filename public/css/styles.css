@@ -87,7 +87,7 @@ img { max-width: 100%; display: block; }
 h1, h2, h3 { font-family: Fraunces, Georgia, serif; margin: 0; letter-spacing: -0.03em; }
 h1 { font-size: clamp(40px, 11vw, 58px); line-height: 0.95; }
 h2 { font-size: 28px; }
-.lede { color: var(--gold2); font-size: 17px; line-height: 1.45; margin: 12px 0 22px; max-width: 28ch; }
+.lede { color: var(--gold2); font-size: 17px; line-height: 1.45; margin: 12px 0 22px; max-width: 34ch; }
 
 .row { display: flex; gap: 10px; }
 .row.wrap { flex-wrap: wrap; }

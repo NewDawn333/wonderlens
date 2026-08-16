@@ -5,7 +5,7 @@ import {
   rideEnchantPrompt,
   rideHeading,
 } from "../public/js/data.js";
-import { dataUrlToBlob, loadState, saveState } from "../public/js/store.js";
+import { dataUrlToBlob, loadState, maskedApiKey, normalizeApiKey, saveApiKey, saveState } from "../public/js/store.js";
 
 const checks = [];
 function assert(name, ok, detail = "") {
@@ -106,6 +106,17 @@ const src = fs.readFileSync(new URL("../public/js/app.js", import.meta.url), "ut
 assert("save no longer requires enchanted", !/if \(!activeSpot \|\| !draft\.enchanted\) return;/.test(src));
 assert("save requires original", src.includes("if (!activeSpot || !draft.original) return false;"));
 assert("auto-save after capture", src.includes("await saveShot({ stay: true })"));
+assert("splash has discover the magic", src.includes("Discover the magic within"));
+assert("splash dropped shoot the kids", !/Shoot the kids/i.test(src));
+assert("key test button", src.includes("Test this key"));
+assert("key test hits api-key", src.includes('"/api-key"'));
+assert("ride enchant anywhere", src.includes("no park GPS needed") || src.includes("you do not need to be at the park"));
+
+assert("normalize trims", normalizeApiKey("  xai-abcDEF123  ") === "xai-abcDEF123");
+assert("normalize bearer", normalizeApiKey("Bearer xai-abcDEF123") === "xai-abcDEF123");
+assert("normalize env line", normalizeApiKey("XAI_API_KEY=xai-abcDEF123") === "xai-abcDEF123");
+saveApiKey("xai-testkey9999");
+assert("masked key", maskedApiKey() === "xai-…9999");
 
 const failed = checks.filter((item) => !item.ok);
 if (failed.length) {

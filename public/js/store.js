@@ -2,11 +2,27 @@ const KEY = "wonderlens-v1";
 const API_KEY = "wonderlens-xai-key";
 
 export function loadApiKey() {
-  return (localStorage.getItem(API_KEY) || "").trim();
+  return normalizeApiKey(localStorage.getItem(API_KEY) || "");
+}
+
+export function normalizeApiKey(raw) {
+  let value = String(raw || "").trim();
+  value = value.replace(/^["']+|["']+$/g, "");
+  value = value.replace(/^Bearer\s+/i, "").trim();
+  const env = /(?:XAI_API_KEY\s*=\s*)?(xai-[A-Za-z0-9._~+/-]+)/i.exec(value);
+  if (env) return env[1];
+  return value.replace(/\s+/g, "");
+}
+
+export function maskedApiKey() {
+  const key = loadApiKey();
+  if (!key) return "";
+  if (key.length < 8) return "saved";
+  return `${key.slice(0, 4)}…${key.slice(-4)}`;
 }
 
 export function saveApiKey(key) {
-  const value = String(key || "").trim();
+  const value = normalizeApiKey(key);
   if (value) localStorage.setItem(API_KEY, value);
   else localStorage.removeItem(API_KEY);
   return value;

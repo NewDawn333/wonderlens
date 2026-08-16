@@ -22,6 +22,8 @@ import {
   getPhoto,
   loadApiKey,
   loadState,
+  maskedApiKey,
+  normalizeApiKey,
   putPhoto,
   saveApiKey,
   saveState,
@@ -43,6 +45,7 @@ let game = { kind: null, index: 0, land: "Main Street" };
 let hasKey = Boolean(loadApiKey());
 let toast = "";
 let busy = "";
+let keyProbe = "";
 let appInfo = { version: "web", build: "0" };
 let latestRelease = null;
 
@@ -59,6 +62,7 @@ function persist() {
 }
 
 function setView(next) {
+  if (next !== "shoot" && next !== "result") busy = "";
   view = next;
   render();
 }
@@ -262,9 +266,9 @@ function projectYou() {
 function renderSplash() {
   return `<section class="view splash">
     <div class="hero">
-      <p class="kicker">Family quest · Parks day</p>
+      <p class="kicker">Family quest</p>
       <h1>Wonderlens</h1>
-      <p class="lede">Walk the lands. Shoot the kids. Grok Imagine paints magic onto the real photo.</p>
+      <p class="lede">Discover the magic within. Photograph the day, and let Imagine add extra light around the real photo.</p>
       <button class="btn full" data-go="onboard">Start today’s hunt</button>
     </div>
   </section>`;
@@ -333,7 +337,7 @@ function renderMap() {
     <button class="card next-card ride-card" id="start-ride">
       <p class="kicker">Car ride</p>
       <h3>Photos on the road</h3>
-      <p class="muted">Drive down or ride home. GPS notes the place. The album keeps a history of ${pairLabel()}.</p>
+      <p class="muted">Drive down or ride home. GPS notes the place. Enchant works anywhere — you do not need to be at the park.</p>
     </button>
     <div class="map-shell">${mapSvg()}</div>
     ${
@@ -396,7 +400,8 @@ function renderShoot() {
   if (!spot) return renderMap();
   const ride = isRide(spot);
   const placeLine = ride
-    ? [spot.heading, spot.place].filter(Boolean).join(" · ") || "GPS will note this stop"
+    ? [...new Set([spot.heading, spot.place].filter((part) => part && part !== "Finding this place…"))].join(" · ") ||
+      "GPS will note this stop"
     : "";
   return `<section class="view">
     <button class="back" ${ride ? `data-go="album"` : `data-spot="${spot.id}"`}>← ${ride ? "Album" : spot.short}</button>
@@ -404,7 +409,7 @@ function renderShoot() {
     <h2>${ride ? "Shot for the road" : "Make the shot"}</h2>
     <p class="muted">${
       ride
-        ? `A page in the history of ${pairLabel()}. ${placeLine}.`
+        ? `A page in the history of ${pairLabel()}. ${placeLine}. Enchant works on the road — no park GPS needed.`
         : spot.mission
     }</p>
     <div class="camera-box" style="margin:14px 0">${
@@ -568,6 +573,7 @@ function renderLine() {
 }
 
 function renderSettings() {
+  const masked = maskedApiKey();
   return `<section class="view">
     <p class="kicker">Setup</p>
     <h2>Phone + Imagine</h2>
@@ -575,13 +581,17 @@ function renderSettings() {
       <div class="card stack">
         <p class="muted">${
           hasKey
-            ? "Imagine key is saved on this phone. Enchant will work with cell data in the park."
-            : "Paste an xAI key so Enchant and Line Buddy work without the Mac."
+            ? `Key saved on this phone${masked ? ` (${masked})` : ""}. Enchant works on cell data, including car-ride photos.`
+            : "Paste an xAI key so Enchant and Line Buddy work on this phone."
         }</p>
         <label class="field">XAI_API_KEY
           <input id="api-key" type="password" placeholder="xai-..." autocomplete="off">
         </label>
         <button class="btn full" id="save-key">Save key on this phone</button>
+        <button class="btn ghost full" id="test-key" ${busy === "Testing key…" ? "disabled" : ""}>${
+          busy === "Testing key…" ? "Testing…" : "Test this key"
+        }</button>
+        ${keyProbe ? `<p class="muted">${keyProbe}</p>` : ""}
       </div>
       <div class="card stack">
         <p class="kicker">Updates</p>
@@ -740,6 +750,7 @@ function bind() {
     el.addEventListener("click", () => askBuddy(el.dataset.buddy))
   );
   app.querySelector("#save-key")?.addEventListener("click", saveKey);
+  app.querySelector("#test-key")?.addEventListener("click", testKey);
   app.querySelector("#check-update")?.addEventListener("click", checkUpdate);
   app.querySelector("#open-releases")?.addEventListener("click", (event) => {
     event.preventDefault();
@@ -938,23 +949,56 @@ async function imageFromXai(payload) {
   return null;
 }
 
-async function xai(pathname, payload) {
+async function xai(pathname, payload, options = {}) {
   const key = loadApiKey();
   if (!key) throw new Error("Add your xAI key in Setup so Imagine can run on this phone.");
-  const res = await fetch(`https://api.x.ai/v1${pathname}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json().catch(() => ({}));
+  const method = options.method || (payload == null ? "GET" : "POST");
+  let res;
+  try {
+    res = await fetch(`https://api.x.ai/v1${pathname}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${key}`,
+        Accept: "application/json",
+        ...(payload != null ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(payload != null ? { body: JSON.stringify(payload) } : {}),
+    });
+  } catch {
+    throw new Error("Could not reach xAI. Check cell data, then tap Test this key in Setup.");
+  }
+  const text = await res.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text.slice(0, 240) };
+  }
   if (!res.ok) {
-    const message = data?.error?.message || data?.error || data?.message || `Request failed (${res.status})`;
+    const message =
+      data?.error?.message || data?.error || data?.message || data?.raw || `Request failed (${res.status})`;
     throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
   return data;
+}
+
+async function enchantImage(prompt, original) {
+  const apiImage = await compressImage(dataUrlToBlob(original), 1024, 0.8);
+  const payload = {
+    model: "grok-imagine-image-2.0",
+    prompt,
+    image: { url: apiImage, type: "image_url" },
+    response_format: "b64_json",
+  };
+  try {
+    return await imageFromXai(await xai("/images/edits", payload));
+  } catch (err) {
+    const msg = String(err?.message || err);
+    if (!/response_format|b64|400/.test(msg)) throw err;
+    const retry = { ...payload };
+    delete retry.response_format;
+    return await imageFromXai(await xai("/images/edits", retry));
+  }
 }
 
 async function enchant() {
@@ -964,15 +1008,12 @@ async function enchant() {
   try {
     let image = null;
     if (loadApiKey()) {
-      const data = await xai("/images/edits", {
-        model: "grok-imagine-image-2.0",
-        prompt: isRide(activeSpot)
+      image = await enchantImage(
+        isRide(activeSpot)
           ? rideEnchantPrompt(activeSpot.place || activeSpot.heading, state.crew)
           : enchantPrompt(activeSpot, state.crew),
-        image: { url: draft.original, type: "image_url" },
-        response_format: "b64_json",
-      });
-      image = await imageFromXai(data);
+        draft.original
+      );
     } else {
       const res = await fetch("/api/enchant", {
         method: "POST",
@@ -1106,15 +1147,17 @@ Give one ${kind} now. Rules:
 }
 
 async function saveKey() {
-  const key = app.querySelector("#api-key")?.value.trim();
+  const typed = app.querySelector("#api-key")?.value || "";
+  const key = normalizeApiKey(typed);
   if (!key) return;
-  if (!key.startsWith("xai-") && key.length < 20) {
+  if (!key.startsWith("xai-") && key.length < 24) {
     toast = { text: "That does not look like an xAI key.", kind: "bad" };
     render();
     return;
   }
   saveApiKey(key);
   hasKey = true;
+  keyProbe = `Saved ${maskedApiKey()}. Tap Test this key next.`;
   if (!isNative()) {
     try {
       await fetch("/api/key", {
@@ -1126,8 +1169,48 @@ async function saveKey() {
       // Phone-local key is enough for the Android app.
     }
   }
-  toast = { text: "Key saved on this phone. Enchant is live.", kind: "" };
+  toast = { text: "Key saved on this phone.", kind: "" };
   render();
+}
+
+async function testKey() {
+  const typed = app.querySelector("#api-key")?.value;
+  if (typed && typed.trim()) {
+    const key = normalizeApiKey(typed);
+    if (key) {
+      saveApiKey(key);
+      hasKey = true;
+    }
+  }
+  if (!loadApiKey()) {
+    toast = { text: "Paste a key first.", kind: "bad" };
+    render();
+    return;
+  }
+  busy = "Testing key…";
+  keyProbe = "Calling xAI…";
+  toast = "";
+  render();
+  try {
+    const info = await xai("/api-key", null, { method: "GET" });
+    if (info.api_key_blocked || info.api_key_disabled || info.team_blocked) {
+      throw new Error("This key is blocked or disabled in the xAI console.");
+    }
+    const ping = await xai("/responses", {
+      model: "grok-4.5",
+      input: "Reply with the single word ready.",
+    });
+    const reply = extractText(ping) || "ok";
+    busy = "";
+    keyProbe = `Key works${info.name ? ` (${info.name})` : ""} · ${maskedApiKey()}. Grok said “${reply.slice(0, 48)}”. Enchant a car-ride photo next — no park GPS needed.`;
+    toast = { text: "xAI key is live on this phone.", kind: "" };
+    render();
+  } catch (err) {
+    busy = "";
+    keyProbe = err.message || "Key test failed.";
+    toast = { text: keyProbe, kind: "bad" };
+    render();
+  }
 }
 
 function applyPosition(pos) {
