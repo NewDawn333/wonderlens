@@ -65,6 +65,28 @@ jobs:
           name: wonderlens-apk
           path: dist/wonderlens.apk
 
+      - name: Compose release notes
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from "node:fs";
+          import { APP_NEWS } from "./public/js/news.js";
+          const bullets = APP_NEWS.map((item) => `- ${item}`).join("\n");
+          fs.writeFileSync(
+            "release-body.md",
+            [
+              "Sideload `wonderlens.apk` over the existing Wonderlens install. Same signing key, so you do not uninstall.",
+              "",
+              "## In this APK",
+              bullets,
+              "",
+              "1. Download the APK below in Chrome",
+              "2. Open the download and Install",
+              "3. Allow Chrome to install unknown apps if Android asks",
+              "",
+            ].join("\n")
+          );
+          EOF
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -73,9 +95,4 @@ jobs:
           generate_release_notes: true
           make_latest: true
           files: dist/wonderlens.apk
-          body: |
-            Sideload `wonderlens.apk` over the existing Wonderlens install. Same signing key, so you do not uninstall.
-
-            1. Download the APK below in Chrome
-            2. Open the download and Install
-            3. Allow Chrome to install unknown apps if Android asks
+          body_path: release-body.md
