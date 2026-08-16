@@ -1,0 +1,81 @@
+name: Android release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Build web bundle and sync Capacitor
+        run: npm run cap:sync
+
+      - name: Decode signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          mkdir -p android/keystore
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/keystore/wonderlens.jks
+          cat > android/keystore.properties <<EOF
+          storeFile=keystore/wonderlens.jks
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=wonderlens
+          keyPassword=${ANDROID_KEY_PASSWORD}
+          EOF
+
+      - name: Assemble signed APK
+        working-directory: android
+        run: |
+          ./gradlew assembleRelease --no-daemon \
+            -PwlVersionCode=$(( 10 + ${{ github.run_number }} )) \
+            -PwlVersionName=1.0.${{ github.run_number }}
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk dist/wonderlens.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wonderlens-apk
+          path: dist/wonderlens.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Wonderlens 1.0.${{ github.run_number }}
+          generate_release_notes: true
+          make_latest: true
+          files: dist/wonderlens.apk
+          body: |
+            Sideload `wonderlens.apk` over the existing Wonderlens install. Same signing key, so you do not uninstall.
+
+            1. Download the APK below in Chrome
+            2. Open the download and Install
+            3. Allow Chrome to install unknown apps if Android asks
