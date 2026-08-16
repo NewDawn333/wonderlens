@@ -205,6 +205,29 @@ select { appearance: none; }
   margin-bottom: 14px;
 }
 .muted { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.build-ver {
+  margin: 0;
+  font-family: Fraunces, serif;
+  font-size: 22px;
+  color: var(--gold2);
+  line-height: 1.15;
+}
+.build-status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.build-status.ok { color: var(--ok); }
+.build-status.next { color: var(--gold2); }
+.news {
+  margin: 0;
+  padding-left: 1.15em;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
 .gold { color: var(--gold); }
 .progress {
   min-width: 88px;

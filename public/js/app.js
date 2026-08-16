@@ -36,6 +36,12 @@ import {
   saveState,
 } from "./store.js";
 import { destroyParkMap, mountParkMap, parkMapHint, saveParkMapCamera, updateParkMapYou } from "./park-map.js";
+import {
+  APP_NEWS,
+  installedBuildLabel,
+  installedVsLatest,
+  latestBuildLabel,
+} from "./news.js";
 
 const GITHUB_REPO = "NewDawn333/wonderlens";
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
@@ -58,6 +64,8 @@ let busy = "";
 let keyProbe = "";
 let appInfo = { version: "web", build: "0" };
 let latestRelease = null;
+let releaseStatus = "idle";
+let releaseError = "";
 
 function isNative() {
   return Boolean(window.Capacitor?.isNativePlatform?.());
@@ -74,7 +82,13 @@ function persist() {
 function setView(next) {
   if (next !== "shoot" && next !== "result") busy = "";
   view = next;
+  if (next === "settings") loadLatestRelease();
   render();
+}
+
+function newsList(items, empty = "No notes for this build yet.") {
+  if (!items?.length) return `<p class="muted">${escapeHtml(empty)}</p>`;
+  return `<ul class="news">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
 
 function enabledSpots() {
@@ -585,6 +599,46 @@ function renderLine() {
   </section>`;
 }
 
+function renderBuildCards() {
+  const mine = installedBuildLabel(appInfo, isNative());
+  const latest = latestBuildLabel(latestRelease);
+  const vs = installedVsLatest(appInfo, latestRelease);
+  const status =
+    vs === "latest"
+      ? `<p class="build-status ok">You’re on this build.</p>`
+      : vs === "behind"
+        ? `<p class="build-status next">Newer APK available — tap below to install.</p>`
+        : vs === "ahead"
+          ? `<p class="muted">This install is newer than GitHub latest.</p>`
+          : "";
+  const latestMeta = [latest?.tag, latest?.when].filter(Boolean).join(" · ");
+  let latestBody = `<p class="muted">Looking up GitHub…</p>`;
+  if (releaseStatus === "error") {
+    latestBody = `<p class="muted">${escapeHtml(releaseError || "Could not reach GitHub.")}</p>`;
+  } else if (latest) {
+    latestBody = `
+      <p class="build-ver">${escapeHtml(latest.title)}</p>
+      ${latestMeta ? `<p class="muted">${escapeHtml(latestMeta)}</p>` : ""}
+      ${status}
+      ${newsList(latest.notes, "GitHub did not include a what’s-new yet.")}`;
+  } else if (releaseStatus === "idle") {
+    latestBody = `<p class="muted">GitHub latest will show here in a moment.</p>`;
+  }
+  return `
+      <div class="card stack">
+        <p class="kicker">This phone</p>
+        <p class="build-ver">${escapeHtml(mine.title)}</p>
+        <p class="muted">${escapeHtml(mine.meta)}</p>
+        ${newsList(APP_NEWS)}
+      </div>
+      <div class="card stack">
+        <p class="kicker">Newest GitHub build</p>
+        ${latestBody}
+        <button class="btn full" id="check-update">Check GitHub for a new build</button>
+        <a class="btn ghost full" id="open-releases" href="${RELEASES_URL}" target="_blank" rel="noopener">Open releases in Chrome</a>
+      </div>`;
+}
+
 function renderSettings() {
   const masked = maskedApiKey();
   return `<section class="view">
@@ -606,16 +660,7 @@ function renderSettings() {
         }</button>
         ${keyProbe ? `<p class="muted">${keyProbe}</p>` : ""}
       </div>
-      <div class="card stack">
-        <p class="kicker">Updates</p>
-        <p class="muted">This phone is on ${appInfo.version} (${appInfo.build}). ${
-          latestRelease
-            ? `GitHub latest is ${latestRelease.name || latestRelease.tag_name}.`
-            : "Check GitHub for a newer APK you can install in Chrome."
-        }</p>
-        <button class="btn full" id="check-update">Check GitHub for a new build</button>
-        <a class="btn ghost full" id="open-releases" href="${RELEASES_URL}" target="_blank" rel="noopener">Open releases in Chrome</a>
-      </div>
+      ${renderBuildCards()}
       <div class="card stack">
         <p class="muted">${
           isNative()
@@ -1415,29 +1460,46 @@ function openExternal(url) {
   window.open(url, "_blank", "noopener");
 }
 
-async function checkUpdate() {
-  toast = { text: "Checking GitHub…", kind: "" };
-  render();
+async function loadLatestRelease({ force = false } = {}) {
+  if (releaseStatus === "loading") return;
+  if (latestRelease && !force && releaseStatus === "ready") return;
+  releaseStatus = "loading";
+  if (view === "settings") render();
   try {
     const res = await fetch(RELEASES_API, { headers: { Accept: "application/vnd.github+json" } });
     if (!res.ok) throw new Error("Could not reach GitHub releases.");
     latestRelease = await res.json();
-    const apk = (latestRelease.assets || []).find((asset) => asset.name.endsWith(".apk"));
-    if (apk?.browser_download_url) {
-      toast = { text: `${latestRelease.name || latestRelease.tag_name} is ready. Opening the APK…`, kind: "" };
-      render();
-      openExternal(apk.browser_download_url);
-      return;
-    }
-    toast = { text: "Release found, but no APK yet. Open releases and wait for Actions.", kind: "warn" };
-    render();
+    releaseStatus = "ready";
+    releaseError = "";
   } catch (err) {
-    toast = { text: err.message || "Update check failed.", kind: "bad" };
-    render();
+    releaseStatus = "error";
+    releaseError = err.message || "Could not reach GitHub.";
   }
+  if (view === "settings") render();
+}
+
+async function checkUpdate() {
+  toast = { text: "Checking GitHub…", kind: "" };
+  render();
+  await loadLatestRelease({ force: true });
+  if (releaseStatus === "error") {
+    toast = { text: releaseError || "Update check failed.", kind: "bad" };
+    render();
+    return;
+  }
+  const apk = (latestRelease?.assets || []).find((asset) => asset.name.endsWith(".apk"));
+  if (apk?.browser_download_url) {
+    toast = { text: `${latestRelease.name || latestRelease.tag_name} is ready. Opening the APK…`, kind: "" };
+    render();
+    openExternal(apk.browser_download_url);
+    return;
+  }
+  toast = { text: "Release found, but no APK yet. Open releases and wait for Actions.", kind: "warn" };
+  render();
 }
 
 await setupNativeChrome();
 await ping();
+void loadLatestRelease();
 if (state.onboarded) startGeo();
 render();
