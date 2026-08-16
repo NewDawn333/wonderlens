@@ -15,6 +15,7 @@ import {
   cleanPolishedExtras,
   extrasForRideLook,
   gpsMovedEnough,
+  lineBuddyPrompt,
   polishRideIdeaPrompt,
   rideEnchantPrompt,
   rideHeading,
@@ -47,7 +48,7 @@ let view = state.onboarded ? "map" : "splash";
 let park = state.parks.dl ? "dl" : "dca";
 let activeSpot = null;
 let draft = { original: "", enchanted: "", note: "" };
-let rideLook = { style: "gold-dust", idea: "", polished: "" };
+let rideLook = { style: "opening-day", idea: "", polished: "" };
 let keepScroll = false;
 let split = 52;
 let game = { kind: null, index: 0, land: "Main Street" };
@@ -181,10 +182,10 @@ function syncRideLook() {
 function rideStyleNote() {
   if (rideLook.style === "custom") {
     return rideLook.polished
-      ? "Using your polished prompt. Faces stay the same."
-      : "Your short idea is wrapped so faces stay the same.";
+      ? "Using your polished prompt. Faces stay. Clothes and year go to 1955."
+      : "Your short idea is wrapped so faces stay and the year becomes 1955.";
   }
-  return ridePresetById(rideLook.style)?.blurb || "Pick a look for Enchant.";
+  return ridePresetById(rideLook.style)?.blurb || "Pick a 1955 look.";
 }
 
 function kmFromPark() {
@@ -245,9 +246,9 @@ function banner() {
 function renderSplash() {
   return `<section class="view splash">
     <div class="hero">
-      <p class="kicker">Family quest</p>
+      <p class="kicker">Time machine</p>
       <h1>Wonderlens</h1>
-      <p class="lede">Discover the magic within. Photograph the day, and let Imagine add extra light around the real photo.</p>
+      <p class="lede">A time machine for the park day. Photograph the trip, then send every frame back to opening day, 1955.</p>
       <button class="btn full" data-go="onboard">Start today’s hunt</button>
     </div>
   </section>`;
@@ -324,7 +325,7 @@ function renderMap() {
     <button class="card next-card ride-card" id="start-ride">
       <p class="kicker">Car ride</p>
       <h3>Photos on the road</h3>
-      <p class="muted">Drive down or ride home. GPS notes the place. Enchant works anywhere — you do not need to be at the park.</p>
+      <p class="muted">Drive down or ride home. GPS notes the place. Send photos back to 1955 from anywhere — you do not need to be at the park.</p>
     </button>
     ${
       nxt
@@ -369,7 +370,7 @@ function renderSpot() {
     <div class="card stack">
       <p class="kicker">Mission</p>
       <p class="mission">${spot.mission}</p>
-      <p class="muted">Get ${crewLabel()} in the frame. Then let Imagine add the extras.</p>
+      <p class="muted">Get ${crewLabel()} in the frame. Then send them back to 1955.</p>
       ${
         near
           ? `<button class="btn full" data-shoot="${spot.id}">Open camera</button>`
@@ -395,13 +396,13 @@ function renderShoot() {
     <h2>${ride ? "Shot for the road" : "Make the shot"}</h2>
     <p class="muted">${
       ride
-        ? `A page in the history of ${pairLabel()}. ${placeLine}. Enchant works on the road — no park GPS needed.`
+        ? `A page in the history of ${pairLabel()}. ${placeLine}. Time travel works on the road — no park GPS needed.`
         : spot.mission
     }</p>
     ${
       ride
         ? `<div class="ride-look">
-        <p class="kicker">Enchant look</p>
+        <p class="kicker">Time look</p>
         <div class="chips ride-styles">
           ${RIDE_PRESETS.map(
             (item) =>
@@ -411,7 +412,7 @@ function renderShoot() {
         </div>
         <p class="muted" id="ride-style-note">${escapeHtml(rideStyleNote())}</p>
         <label class="field">Short idea
-          <textarea id="ride-idea" rows="2" placeholder="e.g. glow on the windows, quiet night road">${escapeHtml(rideLook.idea || "")}</textarea>
+          <textarea id="ride-idea" rows="2" placeholder="e.g. chrome bumper, Sunday best">${escapeHtml(rideLook.idea || "")}</textarea>
         </label>
         <button class="btn ghost full" type="button" id="polish-prompt" ${busy === "Polishing…" ? "disabled" : ""}>${
           busy === "Polishing…" ? "Polishing…" : "Turn this into a full prompt"
@@ -442,7 +443,7 @@ function renderShoot() {
         isShotSaved(spot) ? "See in album" : "Save to album"
       }</button>
       <button class="btn ghost full" id="enchant" ${draft.original && !busy ? "" : "disabled"}>${
-        busy || "Enchant with Imagine"
+        busy || "Send back to 1955"
       }</button>
     </div>
     ${tabbar(ride ? "album" : "map")}
@@ -466,10 +467,10 @@ function renderResult() {
       draft.enchanted && draft.enchanted !== draft.original
         ? `<div class="camera-box compare" style="margin:14px 0; --split:${split}%">
       <img src="${draft.original}" alt="Original">
-      <img class="after" src="${draft.enchanted}" alt="Enchanted">
+      <img class="after" src="${draft.enchanted}" alt="1955 souvenir">
       <input id="split" type="range" min="0" max="100" value="${split}">
     </div>
-    <p class="muted">Slide to compare. Original stays yours. Enchanted is the souvenir.</p>`
+    <p class="muted">Slide to compare. Original stays yours. 1955 is the souvenir.</p>`
         : `<div class="camera-box" style="margin:14px 0">
       <img src="${draft.original}" alt="Saved photo">
     </div>
@@ -528,7 +529,7 @@ function renderAlbum() {
                 </button>`;
               })
               .join("")}</div>`
-          : `<div class="card empty">No road photos yet. Take one and it saves here, even before Enchant.</div>`
+          : `<div class="card empty">No road photos yet. Take one and it saves here, even before the 1955 look.</div>`
       }
       <button class="btn full" id="start-ride" style="margin-top:12px">Add a car-ride photo</button>
     </div>
@@ -548,8 +549,8 @@ function renderLine() {
   }
   return `<section class="view">
     <p class="kicker">Line lounge</p>
-    <h2>Wait like a legend</h2>
-    <p class="muted">No signal required for these. Line Buddy needs a key if you want a custom story.</p>
+    <h2>Wait like it's 1955</h2>
+    <p class="muted">No signal required for these. Line Buddy needs a key if you want a custom opening-day story.</p>
     <div class="card stack" style="margin:14px 0">
       <label class="field">We are in
         <select id="line-land">${[...new Set(SPOTS.map((spot) => spot.land))]
@@ -576,7 +577,7 @@ function renderLine() {
     }
     <div class="card stack" style="margin-top:14px">
       <p class="kicker">Line Buddy</p>
-      <p class="muted">Grok tells a short, kid-safe story or game for this land.</p>
+      <p class="muted">Grok tells a short, kid-safe 1955 story or game for this land.</p>
       <div class="chips">${BUDDY_KINDS.map((item) => `<button class="chip" data-buddy="${item.id}">${item.label}</button>`).join("")}</div>
       <div id="buddy-out" class="muted">${busy || ""}</div>
     </div>
@@ -588,13 +589,13 @@ function renderSettings() {
   const masked = maskedApiKey();
   return `<section class="view">
     <p class="kicker">Setup</p>
-    <h2>Phone + Imagine</h2>
+    <h2>Phone + 1955</h2>
     <div class="stack" style="margin-top:16px">
       <div class="card stack">
         <p class="muted">${
           hasKey
-            ? `Key saved on this phone${masked ? ` (${masked})` : ""}. Enchant works on cell data, including car-ride photos.`
-            : "Paste an xAI key so Enchant and Line Buddy work on this phone."
+            ? `Key saved on this phone${masked ? ` (${masked})` : ""}. Time travel works on cell data, including car-ride photos.`
+            : "Paste an xAI key so 1955 looks and Line Buddy work on this phone."
         }</p>
         <label class="field">XAI_API_KEY
           <input id="api-key" type="password" placeholder="xai-..." autocomplete="off">
@@ -618,7 +619,7 @@ function renderSettings() {
       <div class="card stack">
         <p class="muted">${
           isNative()
-            ? "This is the installed Android app. Photos stay on the phone except for the Imagine request."
+            ? "This is the installed Android app. Photos stay on the phone except for the 1955 Imagine request."
             : "Web preview. For the park, install the Android app so you do not need the Mac tunnel."
         }</p>
         <p class="muted">Cursor on the road: open cursor.com/agents, pick ${GITHUB_REPO}, ask for a change. When it merges to main, GitHub builds a new APK.</p>
@@ -1002,7 +1003,7 @@ async function imageFromXai(payload) {
 
 async function xai(pathname, payload, options = {}) {
   const key = loadApiKey();
-  if (!key) throw new Error("Add your xAI key in Setup so Imagine can run on this phone.");
+  if (!key) throw new Error("Add your xAI key in Setup so this phone can send photos back to 1955.");
   const method = options.method || (payload == null ? "GET" : "POST");
   let res;
   try {
@@ -1085,7 +1086,7 @@ async function polishRidePrompt() {
     rideLook.style = "custom";
     rideLook.polished = polished;
     busy = "";
-    toast = { text: "Full prompt is ready. Enchant when you like.", kind: "" };
+    toast = { text: "Full prompt is ready. Send it back to 1955 when you like.", kind: "" };
     render();
   } catch (err) {
     busy = "";
@@ -1097,7 +1098,7 @@ async function polishRidePrompt() {
 async function enchant() {
   if (!activeSpot || !draft.original) return;
   syncRideLook();
-  busy = "Enchanting…";
+  busy = "Traveling…";
   render();
   try {
     const ridePrompt = rideEnchantPrompt(
@@ -1122,7 +1123,7 @@ async function enchant() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Enchant failed");
+      if (!res.ok) throw new Error(data.error || "Could not send this back to 1955.");
       image = data.image;
     }
     if (!image) throw new Error("Imagine returned no image. Try again.");
@@ -1132,7 +1133,7 @@ async function enchant() {
     setView("result");
   } catch (err) {
     busy = "";
-    toast = { text: err.message || "Enchant failed.", kind: "bad" };
+    toast = { text: err.message || "Could not send this back to 1955.", kind: "bad" };
     render();
   }
 }
@@ -1209,14 +1210,12 @@ async function askBuddy(kind) {
     if (loadApiKey()) {
       const data = await xai("/responses", {
         model: "grok-4.5",
-        input: `You are Line Buddy, a warm, funny park companion for kids and parents waiting in ${game.land} queue. The crew is: ${crewLabel()}.
-Give one ${kind} now. Rules:
-- Kid-safe, kind, and specific to this land
-- 80-140 words max
-- No copyrighted character names, songs, or official mascots
-- No brand logos
-- Make it playable or tellable out loud right now
-- End with one tiny follow-up the kids can answer`,
+        input: lineBuddyPrompt({
+          kind,
+          land: game.land,
+          crew: crewLabel(),
+          wait: `${game.land} queue`,
+        }),
       });
       text = extractText(data);
     } else {
@@ -1297,7 +1296,7 @@ async function testKey() {
     });
     const reply = extractText(ping) || "ok";
     busy = "";
-    keyProbe = `Key works${info.name ? ` (${info.name})` : ""} · ${maskedApiKey()}. Grok said “${reply.slice(0, 48)}”. Enchant a car-ride photo next — no park GPS needed.`;
+    keyProbe = `Key works${info.name ? ` (${info.name})` : ""} · ${maskedApiKey()}. Grok said “${reply.slice(0, 48)}”. Send a car-ride photo back to 1955 next — no park GPS needed.`;
     toast = { text: "xAI key is live on this phone.", kind: "" };
     render();
   } catch (err) {
