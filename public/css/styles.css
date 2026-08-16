@@ -218,8 +218,9 @@ select { appearance: none; }
   overflow: hidden;
   border: 1px solid var(--line);
   background: #10192c;
-  height: min(62vh, 560px);
-  min-height: 420px;
+  height: min(58vh, 520px);
+  min-height: 380px;
+  margin: 4px 0 8px;
   touch-action: none;
 }
 #park-map {
@@ -257,8 +258,10 @@ select { appearance: none; }
 .leaflet-control-attribution a { color: var(--gold2); }
 .map-tools {
   position: absolute;
-  left: 10px;
-  bottom: 28px;
+  right: 10px;
+  top: 10px;
+  left: auto;
+  bottom: auto;
   z-index: 500;
   display: flex;
   gap: 8px;
@@ -274,8 +277,8 @@ select { appearance: none; }
 }
 .map-hint {
   position: absolute;
-  left: 10px;
-  right: 52px;
+  left: 48px;
+  right: 128px;
   top: 10px;
   z-index: 400;
   margin: 0;
@@ -284,7 +287,6 @@ select { appearance: none; }
   line-height: 1.35;
   color: #eef3ff;
   text-shadow: 0 1px 4px rgba(0,0,0,.8);
-  max-width: 42ch;
 }
 .map-pin-wrap { background: none !important; border: 0 !important; }
 .map-pin {

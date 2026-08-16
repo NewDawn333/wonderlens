@@ -313,11 +313,6 @@ function renderMap() {
         )
         .join("")}
     </div>
-    <button class="card next-card ride-card" id="start-ride">
-      <p class="kicker">Car ride</p>
-      <h3>Photos on the road</h3>
-      <p class="muted">Drive down or ride home. GPS notes the place. Enchant works anywhere — you do not need to be at the park.</p>
-    </button>
     <div class="map-shell">
       <div id="park-map" role="application" aria-label="${PARKS[park].name} map"></div>
       <div class="map-tools">
@@ -326,6 +321,11 @@ function renderMap() {
       </div>
       <p class="map-hint">${parkMapHint(park)}</p>
     </div>
+    <button class="card next-card ride-card" id="start-ride">
+      <p class="kicker">Car ride</p>
+      <h3>Photos on the road</h3>
+      <p class="muted">Drive down or ride home. GPS notes the place. Enchant works anywhere — you do not need to be at the park.</p>
+    </button>
     ${
       nxt
         ? `<button class="card next-card" data-spot="${nxt.id}">
