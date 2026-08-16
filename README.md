@@ -1,6 +1,6 @@
 # Wonderlens
 
-A one-day family companion for the Disneyland Resort. Walk to landmarks, photograph the kids, and let Grok Imagine add land-themed extras around the real photo.
+A family time machine for the Disneyland Resort. Walk to landmarks, photograph the trip, and send every frame back to opening day, 1955 — clothes, surroundings, and film stock included.
 
 This is a personal family app, not an official park product.
 

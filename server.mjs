@@ -1,4 +1,4 @@
-import { polishRideIdeaPrompt } from "./public/js/data.js";
+import { lineBuddyPrompt, polishRideIdeaPrompt } from "./public/js/data.js";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
@@ -228,14 +228,7 @@ const server = http.createServer(async (req, res) => {
       const crew = String(body.crew || "a family");
       const kind = String(body.kind || "story");
       const wait = String(body.wait || "a ride line");
-      const prompt = `You are Line Buddy, a warm, funny park companion for kids and parents waiting in ${wait} at ${land}. The crew is: ${crew}.
-Give one ${kind} now. Rules:
-- Kid-safe, kind, and specific to this land
-- 80-140 words max
-- No copyrighted character names, songs, or official mascots
-- No brand logos
-- Make it playable or tellable out loud right now
-- End with one tiny follow-up the kids can answer`;
+      const prompt = lineBuddyPrompt({ kind, land, crew, wait });
       const data = await xai("/responses", {
         model: MODEL_TEXT,
         input: prompt,

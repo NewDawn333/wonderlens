@@ -29,7 +29,7 @@ Signing uses `android/keystore.properties` (gitignored). A recovery copy lives i
 
 1. Allow location and camera when Android asks.
 2. Setup → paste an xAI key from https://console.x.ai
-3. Enchant and Line Buddy then work over cell data.
+3. Time-machine looks and Line Buddy then work over cell data.
 
 ## Phone updates
 
