@@ -6,13 +6,13 @@ export const PARKS = {
     id: "dl",
     name: "Disneyland Park",
     short: "Disneyland",
-    hint: "Castle, lands, and the original magic",
+    hint: "Opening day, 1955",
   },
   dca: {
     id: "dca",
     name: "California Adventure",
     short: "DCA",
-    hint: "Pier, cars, peaks, and superheroes",
+    hint: "1955 California — pier, highway, Hollywood",
   },
 };
 
@@ -62,10 +62,10 @@ export const SPOTS = [
     color: "#f0c36a",
     icon: "lamp",
     stamp: "Arrival",
-    mission: "Stand just inside the gates, facing the flower beds and the street. Get every kid in the first photo of the day.",
+    mission: "Stand just inside the gates. This is the first frame of opening day.",
     clue: "The day starts where the flowers spell the park.",
     extras:
-      "Add warm golden hour sparkle, drifting gold dust motes, vintage street-lamp glow, and a soft confetti of tiny paper pennants in the air. Keep the real street and people unchanged.",
+      "Turn the gates and street into brand-new 1955 opening-day Main Street: horse-drawn streetcar rails, globe lamps, fresh paint, floral beds, and a crowd in Sunday-best. Dress the family in mid-1950s park clothes. Kodachrome snapshot, mild grain, warm daylight.",
   },
   {
     id: "castle",
@@ -81,10 +81,10 @@ export const SPOTS = [
     color: "#ffd27a",
     icon: "castle",
     stamp: "Castle Light",
-    mission: "Shoot from the hub looking at the castle. Kids in front, turrets behind. This is the postcard.",
-    clue: "The park's compass. Everyone photographs it. Make yours the one that shimmers.",
+    mission: "Shoot from the hub looking at the castle. Opening-day postcard.",
+    clue: "The park's compass. Everyone photographs it. Make yours the 1955 one.",
     extras:
-      "Add cinematic gold-and-teal fireworks blooming softly behind the castle turrets, a faint ribbon of aurora in the sky, and floating spark motes around the family. Keep every person exactly as they appear.",
+      "Render the castle and hub as they would on opening day 1955: new stonework, pennants, a modest crowd in period dress, Kodachrome sky. Restyle the family into 1950s postcard clothes. Soft film grain, not modern fireworks CGI.",
   },
   {
     id: "jungle",
@@ -100,10 +100,10 @@ export const SPOTS = [
     color: "#5bd38a",
     icon: "leaf",
     stamp: "Canopy",
-    mission: "Find hanging vines, carved wood, or the river boats. Kids looking like explorers.",
+    mission: "Find hanging vines, carved wood, or the river boats. 1955 explorers.",
     clue: "Listen for water, drums, and bad jokes about hippos.",
     extras:
-      "Add fireflies, a lush overgrown jungle canopy leaking golden shafts of light, and a distant misty river. A colorful tropical bird may perch nearby. Keep every person exactly as they appear.",
+      "Make Adventureland a brand-new 1955 tropical river landing: thatched roofs, wooden boats, dense jungle as a 1950s set. Dress the family in khaki, cotton, and explorer hats of the era. Warm Kodachrome greens, not modern LED lighting.",
   },
   {
     id: "temple",
@@ -119,10 +119,10 @@ export const SPOTS = [
     color: "#d4a25a",
     icon: "temple",
     stamp: "Relic",
-    mission: "Use the weathered stone, bamboo, or queue carvings as the backdrop. One dramatic explorer pose.",
+    mission: "Use the weathered stone or bamboo as the backdrop. 1955 pulp adventure.",
     clue: "Boulders, torches, and a temple that wants your hat.",
     extras:
-      "Add cinematic dust motes, warm torchlight, ancient carved stone catching gold light, and a hint of vine-covered ruins. Keep every person exactly as they appear.",
+      "Turn the temple trail into a 1955 pulp-adventure ruin: torchlight, carved stone, bamboo, dust in the air. Period safari-casual clothes on the family. Ektachrome warmth, visible film grain, no modern themed plastic.",
   },
   {
     id: "pirates",
@@ -138,10 +138,10 @@ export const SPOTS = [
     color: "#e0b15a",
     icon: "ship",
     stamp: "Lantern",
-    mission: "Brick, iron lace, or the blue-and-white building. Kids as a tiny crew.",
+    mission: "Brick, iron lace, or the waterfront. A 1955 river street.",
     clue: "Wrought iron, jazz in the air, and a bay that hides a ship.",
     extras:
-      "Add hanging warm lanterns, soft sea mist, gold doubloon sparkles, and a ghostly tall-ship silhouette far in the fog. Keep every person exactly as they appear.",
+      "Recast the waterfront as a newly opened 1955 river street: brick, iron lace, hanging oil lanterns, a tall-ship silhouette. Family in 1950s summer clothes. Warm tungsten film, slight haze, no modern signage.",
   },
   {
     id: "mansion",
@@ -157,10 +157,10 @@ export const SPOTS = [
     color: "#b8c4ff",
     icon: "gate",
     stamp: "Moonveil",
-    mission: "Iron gates, the white manor, or the stretching lawn. Slightly spooky, still smiling.",
+    mission: "Iron gates, the white manor, or the lawn. 1955 haunted-house snapshot.",
     clue: "A house on the hill that is dying to meet you.",
     extras:
-      "Add moonlight, pale blue ghostly wisps, drifting fog, and tiny friendly glowing orbs. Keep the mood whimsical, not scary. Keep every person exactly as they appear.",
+      "Make the manor a 1955 park haunted house: iron gates, white facade, moonlit lawn, a little theatrical fog. Family in neat 1950s evening or Sunday clothes. Cool moonlight on warm film, whimsical not gory.",
   },
   {
     id: "bayou",
@@ -176,10 +176,10 @@ export const SPOTS = [
     color: "#7be0a6",
     icon: "firefly",
     stamp: "Firefly",
-    mission: "Trees, water, or the bayou ride plaza. Soft smiles, like a lullaby.",
+    mission: "Trees, water, or the river plaza. A 1955 picnic by the woods.",
     clue: "Cypress, water, and a hundred little lights.",
     extras:
-      "Add hundreds of warm fireflies, willow reflections on dark water, and a honey-gold dusk glow. Keep every person exactly as they appear.",
+      "Turn the bayou into 1955 wooded river country: cypress, wooden docks, fireflies as real dusk insects. Family in casual 1950s picnic clothes. Honey-gold dusk on film, no modern water-ride plastic.",
   },
   {
     id: "thunder",
@@ -195,10 +195,10 @@ export const SPOTS = [
     color: "#e39a4a",
     icon: "mesa",
     stamp: "Mesa",
-    mission: "Red rock, mine trains, or the canyon. Kids as prospectors.",
+    mission: "Red rock, mine trains, or the canyon. 1955 Frontierland.",
     clue: "A mountain that growls and a town that never struck it rich.",
     extras:
-      "Add a painted-desert sunset, blowing gold dust, and dramatic canyon light behind the family. Keep every person exactly as they appear.",
+      "Render Frontierland as opening-day 1955: painted desert rock, a new mine train, dust in the sun. Family in western-tinged 1950s clothes — denim, cotton, maybe a cowboy hat. Warm Kodachrome, not digital HDR.",
   },
   {
     id: "spire",
@@ -214,10 +214,10 @@ export const SPOTS = [
     color: "#7ec8ff",
     icon: "spire",
     stamp: "Outpost",
-    mission: "Stone market, strange ships, or the tall rock spires. Look like you live here.",
-    clue: "Two suns' worth of attitude. A galaxy in a canyon.",
+    mission: "Rocks, ships, or the plaza. 1955 rocket-age canyon.",
+    clue: "The future as a 1955 pulp magazine imagined it.",
     extras:
-      "Add two moons in a deep twilight sky, distant starfighters as tiny lights, and cool blue-orange alien market glow. No logos. Keep every person exactly as they appear.",
+      "Replace later-era sci-fi with a 1955 rocket-age canyon expo: chrome rockets, painted spires, World's Fair pulp-future, no franchise armor. Dress the family in 1950s space-age casual. Film still looks like 1955 Kodachrome, not CGI.",
   },
   {
     id: "small-world",
@@ -233,10 +233,10 @@ export const SPOTS = [
     color: "#8fd4ff",
     icon: "clock",
     stamp: "Clockwork",
-    mission: "The white facade, gold trim, or the canal. Big wave at the camera.",
+    mission: "The facade, gold trim, or the canal. A 1955 storybook garden.",
     clue: "A little clock, a long song, a whole world in a boat.",
     extras:
-      "Add bright paper-craft flags, floating colorful balloons, and a joyful confetti of tiny flowers. Keep every person exactly as they appear.",
+      "Turn the canal into a 1955 storybook boat garden: painted facades, paper flags, a clock tower, toy-like boats. Family in bright 1950s day clothes. Cheerful Kodachrome, no modern overlay graphics.",
   },
   {
     id: "toontown",
@@ -252,10 +252,10 @@ export const SPOTS = [
     color: "#ff8ba7",
     icon: "balloon",
     stamp: "Inkblot",
-    mission: "Crooked houses, bright paint, or the fountain. Kids extra goofy.",
+    mission: "Bright paint or the fountain. 1955 kiddieland.",
     clue: "Nothing is straight, and that is the point.",
     extras:
-      "Add bouncy cartoon clouds, oversized candy-colored props, and playful ink-splash sparkles. Keep the people photoreal and unchanged.",
+      "Recast the square as 1955 kiddieland: candy-colored cottages, a fountain, carnival props, no copyrighted cartoon faces. Family in playful 1950s kids' clothes. Slightly faded snapshot, photoreal people.",
   },
   {
     id: "matterhorn",
@@ -271,10 +271,10 @@ export const SPOTS = [
     color: "#c5d4e8",
     icon: "peak",
     stamp: "Summit",
-    mission: "Get the mountain in the shot. Kids pointing at the peak.",
+    mission: "Get the mountain in the shot. A 1950s alpine postcard.",
     clue: "The park's only alp. It honks. It snows. It watches.",
     extras:
-      "Add a dusting of magical snowfall, a soft alpine glow on the peak, and tiny sparkles like ice crystals. Keep every person exactly as they appear.",
+      "Make the peak a 1950s painted alp over the park: snow, bobsled-era mountain, Kodachrome sky. Family in 1950s sweaters or day clothes. Light film grain, no modern CGI snow overlays.",
   },
   {
     id: "tomorrow",
@@ -290,10 +290,10 @@ export const SPOTS = [
     color: "#5ad0d0",
     icon: "orbit",
     stamp: "Orbit",
-    mission: "Rockets, neon, or the spinning machine. Future-family energy.",
-    clue: "The future that still looks like 1959, and that is a compliment.",
+    mission: "Rockets or the spinning machine. The future, as 1955 saw it.",
+    clue: "The future that still looks like 1955, and that is the point.",
     extras:
-      "Add neon orbit rings, a starfield sky, and sleek retro-future light trails. Keep every person exactly as they appear.",
+      "Rebuild Tomorrowland as 1955 World of Tomorrow: a moon rocket, pastel concrete, atomic-age signs, no later white-mountain coaster. Family in 1950s space-age casual. Color film of the era, not neon nightclub lighting.",
   },
   {
     id: "space",
@@ -309,10 +309,10 @@ export const SPOTS = [
     color: "#8aa7ff",
     icon: "star",
     stamp: "Starfield",
-    mission: "White mountain, rockets, or the courtyard. Kids as astronauts.",
-    clue: "The white cone that launches you through the dark.",
+    mission: "The courtyard or a rocket. 1955 moon-shot photo.",
+    clue: "The gleaming rocket that launches you through the dark.",
     extras:
-      "Add a dense starfield, faint nebula color, and tiny comet streaks in the sky above the real scene. Keep every person exactly as they appear.",
+      "Replace later space-mountain architecture with a 1955 moon-shot courtyard: a silver rocket, concrete pads, optimistic crowd. Family dressed for a 1950s science-fair outing. Night or dusk on 1950s color film, grainy stars, not digital nebula.",
   },
   {
     id: "buena",
@@ -328,10 +328,10 @@ export const SPOTS = [
     color: "#f0c36a",
     icon: "trolley",
     stamp: "Red Car",
-    mission: "The boulevard, the trolley, or the theater-like entrance. Old Hollywood smiles.",
-    clue: "1920s Los Angeles with better snacks.",
+    mission: "The boulevard or the trolley. 1955 Hollywood arrival.",
+    clue: "Southern California, opening week, better snacks.",
     extras:
-      "Add warm tungsten street glow, vintage bokeh lights, and a hint of golden-age Hollywood sparkle. Keep every person exactly as they appear.",
+      "Turn the entrance street into 1955 Los Angeles: red streetcar, palms, gold lettering, sunshine. Family in 1950s California day clothes. Warm Kodachrome, no modern cars or phones.",
   },
   {
     id: "carthay",
@@ -347,10 +347,10 @@ export const SPOTS = [
     color: "#e8c27a",
     icon: "theater",
     stamp: "Circle",
-    mission: "The round plaza and the grand theater. One elegant family portrait.",
+    mission: "The round plaza and the grand theater. 1955 premiere portrait.",
     clue: "The park's living room. Gold, palms, and a fountain.",
     extras:
-      "Add soft golden hour, climbing roses, and elegant film-premiere sparkles in the air. Keep every person exactly as they appear.",
+      "Make the circle a 1955 movie-palace plaza: fountain, climbing roses, a grand theater, evening tungsten. Family in dressy 1950s outing clothes. Soft film bokeh, premiere-night snapshot.",
   },
   {
     id: "avengers",
@@ -366,10 +366,10 @@ export const SPOTS = [
     color: "#ff6b6b",
     icon: "shield",
     stamp: "Recruit",
-    mission: "Industrial campus, murals, or the big yard. Superhero stance optional. Cool is required.",
-    clue: "A campus that trains heroes. You already brought some.",
+    mission: "The industrial yard. A 1955 science-and-aircraft expo.",
+    clue: "A campus of hangars and big ideas, opening day.",
     extras:
-      "Add subtle comic-book energy cracks of gold and crimson light, floating embers, and a heroic sky. No logos or costumes copied onto people. Keep every person exactly as they appear.",
+      "Recast the yard as a 1955 aircraft-and-science exposition: hangars, riveted metal, World's Fair exhibits, no superhero costumes or logos. Family in 1950s day clothes, maybe a paper expo badge. Daylight Kodachrome.",
   },
   {
     id: "cars",
@@ -385,10 +385,10 @@ export const SPOTS = [
     color: "#ff9a4a",
     icon: "neon",
     stamp: "Neon",
-    mission: "Neon motel, mountain backdrop, or the main street of Radiator Springs. Sunset energy even at noon.",
-    clue: "A whole town built from taillights and desert sky.",
+    mission: "Neon motel or desert main street. Real 1955 Route 66.",
+    clue: "A highway town of taillights and desert sky.",
     extras:
-      "Add glowing Route 66 neon, a huge painted sunset, and warm desert dust in the light. Keep every person exactly as they appear.",
+      "Turn the street into a real 1955 Route 66 town: neon motel, chrome bumpers, desert mountains, period cars. Family in road-trip 1950s clothes. Sunset on Kodachrome, dust in the light, no later cartoon-car styling.",
   },
   {
     id: "grizzly",
@@ -404,10 +404,10 @@ export const SPOTS = [
     color: "#7dcea0",
     icon: "bear",
     stamp: "Trail",
-    mission: "Pines, the peak, or the rapids plaza. National-park family photo.",
+    mission: "Pines, the peak, or the rapids. A 1955 park vacation.",
     clue: "California wilderness, with a gift shop.",
     extras:
-      "Add tall golden-hour pines, a hawk in the distance, and sunbeams through mountain mist. Keep every person exactly as they appear.",
+      "Make the peak a 1955 national-park outing: tall pines, a stone-and-timber plaza, mountain light. Family in 1950s camping or day-hike clothes. Golden-hour film, not modern GoPro contrast.",
   },
   {
     id: "pier",
@@ -423,10 +423,10 @@ export const SPOTS = [
     color: "#ff7eb6",
     icon: "wheel",
     stamp: "Boardwalk",
-    mission: "Ferris wheel color, midway lights, or the boardwalk. Carnival grins.",
-    clue: "A pier that stole every color in the crayon box.",
+    mission: "Ferris wheel, midway, or the boards. 1955 Pacific pier.",
+    clue: "A pier that borrowed every color in the crayon box.",
     extras:
-      "Add carnival bokeh lights, a pastel dusk sky, and reflections on the water. Keep every person exactly as they appear.",
+      "Rebuild the pier as a 1955 Pacific boardwalk: wooden planks, a ferris wheel, midway bulbs, ocean air. Family in 1950s carnival clothes. Night or dusk tungsten on grainy color film, not LED pixels.",
   },
   {
     id: "bay",
@@ -442,10 +442,10 @@ export const SPOTS = [
     color: "#7ecbff",
     icon: "wave",
     stamp: "Tide",
-    mission: "The lagoon, the bridge, or the gardens. Save one for evening if you can.",
-    clue: "A bowl of water that turns into a show after dark.",
+    mission: "The lagoon, the bridge, or the gardens. 1955 evening by the water.",
+    clue: "A bowl of water that turns gold after dark.",
     extras:
-      "Add luminous water-fountain color, floating lantern-like lights, and a mirror-smooth bay reflecting the family. Keep every person exactly as they appear.",
+      "Turn the bay into a 1955 garden lagoon: a wooden bridge, lawn, still water, string lights not lasers. Family in 1950s evening clothes. Soft Ektachrome dusk, reflections, no modern fountain show.",
   },
   {
     id: "hollywood",
@@ -461,10 +461,10 @@ export const SPOTS = [
     color: "#e8b86d",
     icon: "clap",
     stamp: "Backlot",
-    mission: "Soundstage streets, posters, or the tower plaza. Movie-premiere faces.",
+    mission: "Soundstage streets or the plaza. 1955 studio snapshot.",
     clue: "The part of the park that knows it is on camera.",
     extras:
-      "Add dramatic movie-set lighting, warm spotlight cones, and a dusting of gold spark. Keep every person exactly as they appear.",
+      "Make the backlot a 1955 Hollywood studio street: soundstage doors, posters in period type, a tall drop-tower as a 1950s movie set facade. Family in premiere-night 1950s clothes. Dramatic tungsten film lighting, no modern LED.",
   },
 ];
 
@@ -613,105 +613,152 @@ export function formatDistance(meters) {
   return `${(meters / 1000).toFixed(1)} km`;
 }
 
+/** Imagine never sees modern land IP; UI can still name the real parks. */
+export const LAND_ERA = {
+  "Main Street": "opening-day Main Street, 1955",
+  Fantasyland: "a 1955 storybook courtyard",
+  Adventureland: "a 1955 tropical river landing",
+  "New Orleans Square": "a 1955 riverfront street",
+  "Bayou Country": "1955 wooded river country",
+  Frontierland: "opening-day 1955 frontier town",
+  "Galaxy's Edge": "a 1955 rocket-age World's Fair canyon",
+  Toontown: "a 1955 kiddieland square",
+  Tomorrowland: "the 1955 World of Tomorrow",
+  "Buena Vista Street": "a 1955 Los Angeles boulevard",
+  "Avengers Campus": "a 1955 aircraft-and-science exposition",
+  "Cars Land": "a real 1955 Route 66 town",
+  "Grizzly Peak": "a 1955 California mountain park",
+  "Pixar Pier": "a 1955 Pacific boardwalk",
+  "Paradise Gardens": "a 1955 garden lagoon",
+  "Hollywood Land": "a 1955 Hollywood studio street",
+};
+
+export const TIME_MACHINE_RULES = [
+  "Send the entire scene back to July 17, 1955, opening day of a brand-new American storybook theme park in Southern California.",
+  "Keep the same recognizable people: the same face structure, the same kids and adults as the same individuals, the same poses, expressions, and head count.",
+  "Do restyle every person to fit mid-1950s American park-day dress: clothing, hair, hats, glasses, shoes, and accessories of 1955.",
+  "Remove phones, smartwatches, athleisure, modern logos, LED glow, later architecture, and later vehicles.",
+  "Change the surroundings to period-correct 1955: architecture, cars, crowds, signs, and materials of that year. Recast later lands as 1955 analogues — rocket-age World's Fair, kiddieland, California highway and pier, aircraft expo — never later franchises.",
+  "Change the photograph itself: Kodachrome or Ektachrome color film, visible grain, slightly soft focus, warm daylight or tungsten, photoreal, not modern HDR, not cartoon, not CGI.",
+  "Do not replace people with different people. Do not cartoonify anyone or turn anyone into a mascot.",
+  "Do not add recognizable copyrighted mascots, character portraits, logos, or wordmarks.",
+].join(" ");
+
+export function eraWhere(spot) {
+  const land = LAND_ERA[spot?.land] || "a brand-new 1955 American storybook park";
+  const label = spot?.short || spot?.name || "this landmark";
+  return `the ${label} landmark in ${land}`;
+}
+
+export function timeMachinePrompt({ names, where, extras }) {
+  const extra = String(extras || "").trim();
+  return [
+    `This is a real family photograph of ${names} taken at ${where}.`,
+    TIME_MACHINE_RULES,
+    extra ? `Period extras for this frame: ${extra}` : "",
+    "Match the original camera angle and grouping. The result should look like a 1955 souvenir photograph of this same family, not a modern filter.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function enchantPrompt(spot, crew) {
   const names = crew.length ? crew.join(", ") : "this family";
-  return [
-    `This is a real family photograph of ${names} taken at a theme-park landmark called ${spot.name} in ${spot.land}.`,
-    "Keep every person exactly as they appear, including faces, ages, bodies, hair, clothing, poses, and expressions.",
-    "Do not replace, beautify, age-shift, cartoonify, or redraw any person. Do not add recognizable copyrighted mascots, logos, or wordmarks.",
-    `Only add photographic, family-friendly magical extras around them: ${spot.extras}`,
-    "Match the original photo's lighting, time of day, and camera angle. The result must still look like a real photograph the family took, with the extras composited naturally.",
-  ].join(" ");
+  return timeMachinePrompt({
+    names,
+    where: eraWhere(spot),
+    extras: spot?.extras,
+  });
 }
 
 export const RIDE_EXTRAS =
-  "Warm golden-hour or twilight light through the windows, a soft cinematic glow on the seats, gentle lens flare, a few floating memory sparkles, and a painterly sky over the real road. Keep the real car, windows, landscape, and people unchanged.";
+  "July 17, 1955 opening-day light on a family car trip: restyle every person into mid-1950s road clothes, keep the same faces, Kodachrome grain, period cars and roadside, photoreal film not modern HDR.";
 
-/** Simple chips in the app; extras go to Imagine. No official mascots or wordmarks. */
+/** Simple chips in the app; extras flavor the 1955 time-machine wrap. No official mascots or wordmarks. */
 export const RIDE_PRESETS = [
   {
-    id: "gold-dust",
-    label: "Gold dust",
-    blurb: "Soft sparkle on the glass",
+    id: "opening-day",
+    label: "Opening day",
+    blurb: "Packed 1955 park-day light",
     extras:
-      "Preserve every original face, age, skin tone, hair, glasses, freckles, expression, pose, and clothing exactly. Do not replace, beautify, or age anyone. Keep the same car interior, seats, belts, and window framing. Add only a faint gold dust sparkle caught in the window glass and a tiny warm lantern hanging from the rear-view mirror. Distant night sky may show a far-off castle silhouette. Photoreal, cinematic, warm tungsten light. No cartoons, no mascots, no logos, no text.",
+      "July 17, 1955 opening day: bunting, fresh paint, a packed Main Street crowd in Sunday best. Restyle every person into 1955 park clothes. Keep the same faces. Photoreal Kodachrome, mild grain. No mascots, no logos, no text.",
   },
   {
-    id: "castle-light",
-    label: "Castle light",
-    blurb: "Warm glow on the horizon",
+    id: "kodachrome",
+    label: "Kodachrome",
+    blurb: "Saturated 1955 color film",
     extras:
-      "Lock identity: same faces, same kids, same adults, same clothes, same car. Do not swap people. Through the windshield, add a distant storybook castle glowing gold on the night horizon, with a soft bloom of light on the dashboard. Keep reflections natural. Photoreal, not illustrated. No characters, no wordmarks, no fireworks overlay covering faces.",
+      "Saturated 1955 Kodachrome: reds and greens pop, slight cyan sky, warm skin, visible film grain. Restyle clothes and hair to mid-1950s. Keep the same faces. Photoreal, not digital HDR. No mascots, no logos, no text.",
   },
   {
-    id: "star-wish",
-    label: "Star wish",
-    blurb: "One bright star in the sky",
+    id: "newsreel",
+    label: "Newsreel",
+    blurb: "Black-and-white 1955 still",
     extras:
-      "Keep original faces and bodies pixel-faithful. Same hair, same expressions. Night sky outside the windows gets a single extra-bright wishing star and a thin trail of gold stardust along the glass, never across faces. Interior stays the real car. Photoreal family snapshot, gentle magic only. No mascots, no cartoons, no captions.",
+      "Black-and-white 1955 newsreel still: high contrast, slight motion blur, silver grain. Restyle every person into 1955 street clothes. Keep the same faces. Photoreal documentary still, not illustrated. No mascots, no logos, no captions.",
   },
   {
-    id: "fireflies",
-    label: "Fireflies",
-    blurb: "Tiny lights in the dark",
+    id: "sunday-best",
+    label: "Sunday best",
+    blurb: "Church-to-park outfits",
     extras:
-      "Do not alter faces, skin, or clothing. Same people, same seats. Add a handful of tiny warm firefly lights drifting just outside the windows and one or two reflections on the glass. Keep the cabin otherwise unchanged. Photoreal, quiet, dusk mood. No insects on skin, no characters, no logos.",
+      "Church-to-park Sunday best: men in ties, women in full skirts and gloves, children in pressed outfits. Keep the same faces. Photoreal 1955 color film. No mascots, no logos, no text.",
   },
   {
-    id: "vintage-lamps",
-    label: "Vintage lamps",
-    blurb: "Old-park lamp glow",
+    id: "roadster",
+    label: "Roadster",
+    blurb: "Chrome bumpers and whitewalls",
     extras:
-      "Identity lock on every person and every face. Keep the real car interior. Outside, add a row of vintage park lamps with warm globes along a tree-lined path, as if the car is paused near an old main street at night. Soft tungsten spill on the dashboard only. Photoreal. No storefront names, no mascots, no cartoon style.",
+      "Chrome bumpers, two-tone 1955 automobiles, whitewalls, a real roadside. Restyle clothes to 1955 driving-day outfits. Keep the same faces. Photoreal Kodachrome. No mascots, no logos, no text.",
   },
   {
-    id: "lanterns",
-    label: "Lanterns",
-    blurb: "Paper lanterns in the trees",
+    id: "postcard",
+    label: "Postcard",
+    blurb: "Hand-tinted souvenir card",
     extras:
-      "Keep the same faces and outfits exactly. Through the side windows, hanging paper lanterns glow in dark trees — red, gold, and cream — with gentle bokeh. Do not paint lanterns over people. Car stays real. Photoreal night photograph. No festival logos, no characters, no text.",
+      "Hand-tinted linen postcard: slightly oversaturated, a white border feel, 1955 souvenir look. Restyle every person for the era. Keep the same faces. Photoreal printed postcard, not a cartoon. No mascots, no logos, no captions.",
   },
   {
-    id: "jungle-glow",
-    label: "Jungle glow",
-    blurb: "Green vines and warm lamps",
+    id: "snapshot",
+    label: "Snapshot",
+    blurb: "Family Brownie flash",
     extras:
-      "Preserve faces and clothing. Same car. Outside the glass: dense tropical leaves, hanging vines, and a few warm expedition lanterns in the foliage, as if the road runs beside an adventure jungle at night. Subtle green bounce light only on metal, not on skin tones. Photoreal. No animals wearing clothes, no mascots, no ride vehicles.",
+      "Family Brownie snapshot: on-camera flash, square-crop feel, slight blur, amateur 1955 film. Restyle clothes. Keep the same faces. Photoreal snapshot, not a phone HDR shot. No mascots, no logos, no text.",
   },
   {
-    id: "starship-gleam",
-    label: "Starship gleam",
-    blurb: "Cool blue night chrome",
+    id: "home-movie",
+    label: "Home movie",
+    blurb: "Paused 8mm frame",
     extras:
-      "Do not change anyone’s face or age. Keep the real interior. Add cool blue rim light on the window frames and a faint starfield plus distant chrome spires outside, like a tomorrow-city at night. Keep skin tones natural. Photoreal, sleek, not sci-fi CGI. No helmets on the kids, no logos, no characters.",
+      "Paused 8mm home movie: warm, a little soft, a light leak, 1955 color. Restyle hair and dress. Keep the same faces. Photoreal film frame, not video CGI. No mascots, no logos, no text.",
   },
   {
-    id: "bayou-night",
-    label: "Bayou night",
-    blurb: "Moss and river lanterns",
+    id: "boardwalk-55",
+    label: "Boardwalk '55",
+    blurb: "Pacific pier, 1955",
     extras:
-      "Identity-preserving edit. Same people, same car. Through the windows: moonlit cypress, hanging moss, and a few lanterns on a dark river. Warm amber reflections on glass only. Photoreal Southern-night mood. No animals as characters, no boats with faces, no copyrighted figures.",
+      "1955 Pacific boardwalk: neon script, cotton candy, wooden pier, ocean air. Restyle to summer 1955 beach-town clothes. Keep the same faces. Photoreal Ektachrome. No mascots, no logos, no text.",
   },
   {
-    id: "snow-globe",
-    label: "Snow globe",
-    blurb: "Soft snow, warm cabin",
+    id: "highway-66",
+    label: "Highway 66",
+    blurb: "Route 66 road trip",
     extras:
-      "Keep faces, hair, and clothes identical. Same car cabin, now with a hint of frost at the window corners and slow, sparse snowflakes outside. Interior stays cozy and warm. Do not add winter coats if they were not worn. Photoreal. No snowmen with faces, no mascots, no holiday logos.",
+      "1955 Route 66: gas pumps, desert light, chrome, dust in the sun. Restyle to road-trip clothes of the year. Keep the same faces. Photoreal Kodachrome. No mascots, no logos, no text.",
   },
   {
-    id: "sky-sparks",
-    label: "Sky sparks",
-    blurb: "Far-off night sparks",
+    id: "rocket-age",
+    label: "Rocket age",
+    blurb: "World's Fair fins and chrome",
     extras:
-      "Do not retouch faces. Same family, same car. High in the distant sky, small gold and ruby sparks bloom like far-off night fireworks, never covering people. A little colored bounce on the hood or glass is ok. Photoreal photograph. No overlay stickers, no characters, no text in the sky.",
+      "1955 rocket-age World's Fair: fins, chrome, atom motifs, optimistic crowd. Restyle to futurist 1955 visitor clothes. Keep the same faces. Photoreal color film of the year, not sci-fi CGI. No mascots, no logos, no text.",
   },
   {
-    id: "moon-coach",
-    label: "Moon coach",
-    blurb: "Silver moonlight on the road",
+    id: "porch-light",
+    label: "Porch light",
+    blurb: "Warm 1955 evening film",
     extras:
-      "Lock every original face. Keep clothing and car exact. Add a huge silver moon low on the road ahead, a faint empty fairy-tale coach silhouette far in the mist, and a dusting of sparkle on the asphalt. Photoreal, dreamy, still a real family photo. No costumes added to anyone, no portraits of characters, no logos.",
+      "Warm 1955 evening porch light, fireflies as real dusk insects, moths at the lamp. Restyle to 1955 evening dress. Keep the same faces. Photoreal night film, tungsten, grain. No mascots, no logos, no text.",
   },
 ];
 
@@ -732,16 +779,31 @@ export function extrasForRideLook(look) {
 }
 
 export function polishRideIdeaPrompt(idea) {
-  return `A parent typed this short idea for a family car-ride photo edit: ${JSON.stringify(String(idea || "").trim())}
+  return `A parent typed this short idea for a family car-ride photo sent back to 1955: ${JSON.stringify(String(idea || "").trim())}
 
-Rewrite it as ONE detailed Imagine extras paragraph (80-160 words) used to edit a real photograph.
+Rewrite it as ONE detailed Imagine extras paragraph (80-160 words) used to edit a real photograph into opening day, July 17, 1955.
 Rules:
-- Keep original faces, ages, bodies, hair, clothing, poses, and expressions unchanged
-- Do not replace, beautify, cartoonify, or age-shift anyone
+- Keep the same recognizable faces, ages as the same individuals, poses, expressions, and head count
+- Do restyle clothing, hair, hats, glasses, and shoes to authentic mid-1950s American dress
+- Change surroundings, cars, and crowds to 1955; remove phones, LEDs, athleisure, and later buildings
+- Change the photo to Kodachrome/Ektachrome: grain, slightly soft, warm, photoreal, not modern HDR
 - No copyrighted character names, official mascots, logos, or wordmarks
-- Describe photographic, family-friendly magic around the real car, windows, and road
-- Photoreal, not illustrated
 - Return ONLY the extras paragraph, no quotes, labels, or markdown`;
+}
+
+export function lineBuddyPrompt({ kind, land, crew, wait } = {}) {
+  const place = land || "the park";
+  const era = LAND_ERA[place] || "a brand-new 1955 American storybook park";
+  const who = crew || "a family";
+  const beat = kind || "story";
+  return `You are Line Buddy, a warm, funny opening-day companion from July 17, 1955, talking to kids and parents waiting in line at ${era}. The crew is: ${who}.
+Give one ${beat} now. Rules:
+- Kid-safe, kind, and specific to this place as it felt in 1955
+- 80-140 words max
+- No copyrighted character names, songs, or official mascots
+- No brand logos
+- Make it playable or tellable out loud right now
+- End with one tiny follow-up the kids can answer`;
 }
 
 export function cleanPolishedExtras(text) {
@@ -785,13 +847,7 @@ export function formatCoords(lat, lng) {
 
 export function rideEnchantPrompt(place, crew, extras = RIDE_EXTRAS) {
   const names = crew.length ? crew.join(", ") : "this family";
-  const where = place || "the car on the road";
+  const where = place ? `a car ride near ${place}` : "a car ride on the road";
   const extra = String(extras || RIDE_EXTRAS).trim() || RIDE_EXTRAS;
-  return [
-    `This is a real family photograph of ${names} taken during a car ride near ${where}.`,
-    "Keep every person exactly as they appear, including faces, ages, bodies, hair, clothing, poses, and expressions.",
-    "Do not replace, beautify, age-shift, cartoonify, or redraw any person. Do not add recognizable copyrighted mascots, logos, or wordmarks.",
-    `Only add photographic, family-friendly extras around them: ${extra}`,
-    "Match the original photo's lighting, time of day, and camera angle. The result must still look like a real photograph the family took, with the extras composited naturally.",
-  ].join(" ");
+  return timeMachinePrompt({ names, where, extras: extra });
 }
