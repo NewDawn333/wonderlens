@@ -690,8 +690,8 @@ function renderGuess() {
         ? "Tilt down = got it · tilt up = pass"
         : "Tilt isn’t reading yet — tap Got it or Pass";
   return `<section class="view guess play ${flashClass}">
-    <div class="guess-top">
-      <p class="kicker">${guess.phase === "countdown" ? "Get ready" : `${guess.remaining}s`}</p>
+            <div class="guess-top">
+      <p class="guess-time">${guess.phase === "countdown" ? "Get ready" : `${guess.remaining}s`}</p>
       <button class="guess-end" id="guess-end" type="button">End</button>
     </div>
     <p class="guess-word">${escapeHtml(title)}</p>
