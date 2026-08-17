@@ -762,6 +762,18 @@ function endGuessRound() {
   render();
 }
 
+function paintGuessClock() {
+  const time = app.querySelector(".guess-time");
+  const word = app.querySelector(".guess-word");
+  if (guess.phase === "countdown") {
+    if (word) word.textContent = String(Math.max(1, guess.countdown));
+    return;
+  }
+  if (time && (guess.phase === "play" || guess.phase === "flash")) {
+    time.textContent = `${guess.remaining}s`;
+  }
+}
+
 function tickGuess() {
   if (view !== "guess") {
     stopGuess();
@@ -770,27 +782,25 @@ function tickGuess() {
   const now = Date.now();
   if (guess.phase === "countdown") {
     const left = Math.max(0, Math.ceil((guess.countAt - now) / 1000));
-    if (left !== guess.countdown) {
-      guess.countdown = left || 1;
-      if (now >= guess.countAt) {
-        guess.phase = "play";
-        guess.countdown = 0;
-        guessGate = createTiltGate();
-      }
+    guess.countdown = left;
+    if (now >= guess.countAt) {
+      guess.phase = "play";
+      guess.countdown = 0;
+      guessGate = createTiltGate();
       render();
+      return;
     }
+    paintGuessClock();
     return;
   }
   if (guess.phase === "play" || guess.phase === "flash") {
     const left = Math.max(0, Math.ceil((guess.endsAt - now) / 1000));
-    if (left !== guess.remaining) {
-      guess.remaining = left;
-      if (left <= 0) {
-        endGuessRound();
-        return;
-      }
-      render();
+    guess.remaining = left;
+    if (left <= 0) {
+      endGuessRound();
+      return;
     }
+    paintGuessClock();
     if (guess.phase === "flash" && now >= guess.flashUntil) {
       if (guess.tilt === "neutral" || guess.tilt === "unknown" || now >= guess.flashUntil + 1200) {
         advanceGuessWord();
