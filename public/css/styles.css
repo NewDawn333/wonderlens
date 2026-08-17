@@ -472,10 +472,62 @@ select { appearance: none; }
   padding: 14px;
 }
 .game b { display: block; font-size: 16px; margin-bottom: 4px; }
+.game.featured { grid-column: 1 / -1; }
 .prompt {
   font-family: Fraunces, serif;
   font-size: 26px;
   line-height: 1.25;
+}
+
+.view.guess.play {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  padding-top: calc(12px + var(--safe-top));
+  padding-bottom: calc(18px + var(--safe-bot));
+}
+.view.guess.play.got { background: #14532d; }
+.view.guess.play.pass { background: #7a4b12; }
+.guess-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.guess-time {
+  margin: 0;
+  color: var(--gold2);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.guess-end {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px;
+}
+.guess-word {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
+  font-family: Fraunces, serif;
+  font-size: clamp(52px, 16vw, 104px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+.guess-hint { margin: 0; }
+.guess-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0 8px;
 }
 
 .banner {

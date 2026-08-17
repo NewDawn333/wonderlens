@@ -1,8 +1,8 @@
 /** What’s in the source that ships with this APK. Keep newest first. */
 export const APP_NEWS = [
+  "Line lounge: forehead acting — kids act the word, you guess, tilt down for got it and tilt up to pass.",
   "Setup shows this phone’s version next to the newest GitHub APK and a short what’s-new.",
   "Time machine: send park and car-ride photos back to opening day, 1955.",
-  "Live touch park maps with satellite, streets, and My spot.",
 ];
 
 export function parseAppVersion(text) {
