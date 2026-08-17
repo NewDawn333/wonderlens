@@ -16,6 +16,7 @@ import {
   polishRideIdeaPrompt,
   rideEnchantPrompt,
   rideHeading,
+  GAMES,
 } from "../public/js/data.js";
 import { dataUrlToBlob, loadState, maskedApiKey, normalizeApiKey, saveApiKey, saveState } from "../public/js/store.js";
 import {
@@ -27,6 +28,14 @@ import {
   latestBuildLabel,
   parseAppVersion,
 } from "../public/js/news.js";
+import {
+  GUESSTURE_SECONDS,
+  GUESSTURE_WORDS,
+  betaFromGravity,
+  createTiltGate,
+  shuffleWords,
+  tiltZone,
+} from "../public/js/guesstures.js";
 
 const checks = [];
 function assert(name, ok, detail = "") {
@@ -203,6 +212,10 @@ assert("setup this phone card", src.includes("This phone"));
 assert("setup newest github card", src.includes("Newest GitHub build"));
 assert("setup loads latest on boot", src.includes("void loadLatestRelease()"));
 assert("setup news list", src.includes("APP_NEWS"));
+assert("forehead game in line", src.includes("openGuess") && src.includes('id === "act"'));
+assert("forehead guess view", src.includes("function renderGuess"));
+assert("forehead tilt down got", src.includes('id="guess-got"'));
+assert("forehead tilt up pass", src.includes('id="guess-pass"'));
 
 const dlSpots = SPOTS.filter((spot) => spot.park === "dl");
 const dcaSpots = SPOTS.filter((spot) => spot.park === "dca");
@@ -282,6 +295,36 @@ assert("app news has items", APP_NEWS.length >= 3);
 assert("app news no disney marks", !/\b(mickey|minnie|disney|pixar)\b/i.test(APP_NEWS.join(" ")));
 const workflow = fs.readFileSync(new URL("../.github/workflows/android-release.yml", import.meta.url), "utf8");
 assert("release notes from app news", workflow.includes("APP_NEWS") && workflow.includes("body_path: release-body.md"));
+
+assert("forehead game listed", GAMES.act?.title === "Forehead acting");
+assert("guessture seconds", GUESSTURE_SECONDS === 60);
+assert("guessture word count", GUESSTURE_WORDS.length >= 40);
+assert(
+  "guessture words unique",
+  new Set(GUESSTURE_WORDS).size === GUESSTURE_WORDS.length
+);
+assert(
+  "guessture words short",
+  GUESSTURE_WORDS.every((word) => word.length >= 2 && word.length <= 18)
+);
+assert(
+  "guessture no marks",
+  !/\b(mickey|minnie|disney|pixar|goofy|donald|tinker|elsa|frozen|marvel)\b/i.test(GUESSTURE_WORDS.join(" "))
+);
+assert("tilt upright is ready", tiltZone(90) === "neutral");
+assert("tilt to ground is got", tiltZone(165) === "down");
+assert("tilt to sky is pass", tiltZone(15) === "up");
+assert("tilt unknown", tiltZone(null) === "unknown");
+const gate = createTiltGate();
+assert("gate waits for forehead", gate("down") === null);
+assert("gate arms on forehead", gate("neutral") === null);
+assert("gate got after down", gate("down") === "got");
+assert("gate needs forehead again", gate("up") === null);
+assert("gate pass after up", gate("neutral") === null && gate("up") === "pass");
+assert("shuffle keeps length", shuffleWords(GUESSTURE_WORDS).length === GUESSTURE_WORDS.length);
+assert("gravity upright ~90", Math.abs(betaFromGravity({ x: 0, y: 9.8, z: 0 }) - 90) < 2);
+assert("gravity sky is pass", tiltZone(betaFromGravity({ x: 0, y: 0, z: 9.8 })) === "up");
+assert("gravity ground is got", tiltZone(betaFromGravity({ x: 0, y: 0, z: -9.8 })) === "down");
 
 const failed = checks.filter((item) => !item.ok);
 if (failed.length) {
