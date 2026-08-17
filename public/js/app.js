@@ -42,6 +42,14 @@ import {
   installedVsLatest,
   latestBuildLabel,
 } from "./news.js";
+import {
+  GUESSTURE_SECONDS,
+  GUESSTURE_WORDS,
+  createTiltGate,
+  shuffleWords,
+  tiltZone,
+  betaFromGravity,
+} from "./guesstures.js";
 
 const GITHUB_REPO = "NewDawn333/wonderlens";
 const RELEASES_URL = `https://github.com/${GITHUB_REPO}/releases/latest`;
@@ -58,6 +66,11 @@ let rideLook = { style: "opening-day", idea: "", polished: "" };
 let keepScroll = false;
 let split = 52;
 let game = { kind: null, index: 0, land: "Main Street" };
+let guess = blankGuess();
+let guessTick = 0;
+let guessGate = createTiltGate();
+let guessWake = null;
+let guessListening = false;
 let hasKey = Boolean(loadApiKey());
 let toast = "";
 let busy = "";
@@ -79,7 +92,26 @@ function persist() {
   saveState(state);
 }
 
+function blankGuess() {
+  return {
+    phase: "intro",
+    words: [],
+    index: 0,
+    remaining: GUESSTURE_SECONDS,
+    countdown: 3,
+    got: [],
+    passed: [],
+    flash: "",
+    flashUntil: 0,
+    endsAt: 0,
+    countAt: 0,
+    tilt: "unknown",
+    sensor: false,
+  };
+}
+
 function setView(next) {
+  if (view === "guess" && next !== "guess") stopGuess();
   if (next !== "shoot" && next !== "result") busy = "";
   view = next;
   if (next === "settings") loadLatestRelease();
@@ -554,7 +586,7 @@ function renderAlbum() {
 function renderLine() {
   const land = game.land;
   const kinds = Object.entries(GAMES);
-  const current = game.kind ? GAMES[game.kind] : null;
+  const current = game.kind && GAMES[game.kind]?.items ? GAMES[game.kind] : null;
   let prompt = "";
   if (current) {
     const pool = Array.isArray(current.items) ? current.items : current.items[land] || Object.values(current.items).flat();
@@ -576,7 +608,7 @@ function renderLine() {
       ${kinds
         .map(
           ([id, item]) =>
-            `<button class="game" data-game="${id}"><b>${item.title}</b><span class="muted">${item.blurb}</span></button>`
+            `<button class="game ${id === "act" ? "featured" : ""}" data-game="${id}"><b>${item.title}</b><span class="muted">${item.blurb}</span></button>`
         )
         .join("")}
     </div>
@@ -597,6 +629,266 @@ function renderLine() {
     </div>
     ${tabbar("line")}
   </section>`;
+}
+
+function guessWord() {
+  return guess.words[guess.index] || "";
+}
+
+function renderGuess() {
+  const flashClass = guess.phase === "flash" ? guess.flash : "";
+  if (guess.phase === "intro") {
+    return `<section class="view guess">
+      <button class="back" data-go="line">← Line</button>
+      <p class="kicker">Forehead acting</p>
+      <h2>Kids act. You guess.</h2>
+      <div class="card stack" style="margin-top:14px">
+        <p>Hold the phone to your forehead so the kids can read the word.</p>
+        <p class="muted">They act it out. You guess out loud.</p>
+        <p class="muted">Tilt the word toward the ground when you get it. Tilt it toward the sky to pass. Then bring it back to your forehead for the next word.</p>
+        <p class="muted">${GUESSTURE_SECONDS} seconds. No signal needed.</p>
+      </div>
+      <div class="stack" style="margin-top:16px">
+        <button class="btn full" id="guess-start">Start a round</button>
+      </div>
+      ${tabbar("line")}
+    </section>`;
+  }
+  if (guess.phase === "done") {
+    const got = guess.got.length;
+    const passed = guess.passed.length;
+    return `<section class="view guess">
+      <button class="back" data-go="line">← Line</button>
+      <p class="kicker">Time’s up</p>
+      <h2>You got ${got}</h2>
+      <p class="muted">${passed ? `${passed} passed` : "No passes"} · ${got + passed} cards</p>
+      ${
+        got
+          ? `<ul class="news" style="margin-top:14px">${guess.got.map((word) => `<li>${escapeHtml(word)}</li>`).join("")}</ul>`
+          : `<p class="muted" style="margin-top:14px">Nobody got one that round. Try bigger acting.</p>`
+      }
+      <div class="stack" style="margin-top:16px">
+        <button class="btn full" id="guess-start">Play again</button>
+        <button class="btn ghost full" data-go="line">Back to Line</button>
+      </div>
+      ${tabbar("line")}
+    </section>`;
+  }
+  const word = guessWord();
+  const title =
+    guess.phase === "countdown"
+      ? String(guess.countdown)
+      : guess.phase === "flash"
+        ? guess.flash === "got"
+          ? "Got it!"
+          : "Pass"
+        : word;
+  const hint =
+    guess.phase === "countdown"
+      ? "Hold it to your forehead"
+      : guess.sensor
+        ? "Tilt down = got it · tilt up = pass"
+        : "Tilt isn’t reading yet — tap Got it or Pass";
+  return `<section class="view guess play ${flashClass}">
+    <div class="guess-top">
+      <p class="kicker">${guess.phase === "countdown" ? "Get ready" : `${guess.remaining}s`}</p>
+      <button class="guess-end" id="guess-end" type="button">End</button>
+    </div>
+    <p class="guess-word">${escapeHtml(title)}</p>
+    <p class="muted guess-hint">${
+      guess.phase === "countdown"
+        ? "Hold it to your forehead"
+        : guess.phase === "flash"
+          ? "Now back to your forehead"
+          : "Act this out"
+    }</p>
+    ${
+      guess.phase !== "countdown"
+        ? `<div class="guess-actions">
+            <button class="btn ghost" id="guess-pass" type="button">Pass ↑</button>
+            <button class="btn" id="guess-got" type="button">Got it ↓</button>
+          </div>
+          <p class="muted guess-hint">${escapeHtml(hint)}</p>`
+        : ""
+    }
+  </section>`;
+}
+
+function openGuess() {
+  stopGuess();
+  guess = blankGuess();
+  game.kind = "act";
+  setView("guess");
+}
+
+function startGuessRound() {
+  stopGuess(false);
+  guess = {
+    ...blankGuess(),
+    phase: "countdown",
+    words: shuffleWords(GUESSTURE_WORDS),
+    countdown: 3,
+    remaining: GUESSTURE_SECONDS,
+    countAt: Date.now() + 3000,
+    endsAt: Date.now() + 3000 + GUESSTURE_SECONDS * 1000,
+  };
+  guessGate = createTiltGate();
+  holdGuessScreen();
+  void listenGuessSensors();
+  if (view !== "guess") setView("guess");
+  else render();
+  guessTick = window.setInterval(tickGuess, 200);
+}
+
+function stopGuess(reset = true) {
+  if (guessTick) {
+    window.clearInterval(guessTick);
+    guessTick = 0;
+  }
+  unlistenGuessSensors();
+  releaseGuessScreen();
+  if (reset) guess = blankGuess();
+}
+
+function endGuessRound() {
+  if (guessTick) {
+    window.clearInterval(guessTick);
+    guessTick = 0;
+  }
+  unlistenGuessSensors();
+  releaseGuessScreen();
+  guess.phase = "done";
+  guess.flash = "";
+  render();
+}
+
+function tickGuess() {
+  if (view !== "guess") {
+    stopGuess();
+    return;
+  }
+  const now = Date.now();
+  if (guess.phase === "countdown") {
+    const left = Math.max(0, Math.ceil((guess.countAt - now) / 1000));
+    if (left !== guess.countdown) {
+      guess.countdown = left || 1;
+      if (now >= guess.countAt) {
+        guess.phase = "play";
+        guess.countdown = 0;
+        guessGate = createTiltGate();
+      }
+      render();
+    }
+    return;
+  }
+  if (guess.phase === "play" || guess.phase === "flash") {
+    const left = Math.max(0, Math.ceil((guess.endsAt - now) / 1000));
+    if (left !== guess.remaining) {
+      guess.remaining = left;
+      if (left <= 0) {
+        endGuessRound();
+        return;
+      }
+      render();
+    }
+    if (guess.phase === "flash" && now >= guess.flashUntil) {
+      if (guess.tilt === "neutral" || guess.tilt === "unknown" || now >= guess.flashUntil + 1200) {
+        advanceGuessWord();
+      }
+    }
+  }
+}
+
+function applyGuessAction(action) {
+  if (view !== "guess" || (guess.phase !== "play" && guess.phase !== "flash")) return;
+  if (guess.phase === "flash") return;
+  const word = guessWord();
+  if (!word) return;
+  if (action === "got") guess.got.push(word);
+  else guess.passed.push(word);
+  guess.phase = "flash";
+  guess.flash = action;
+  guess.flashUntil = Date.now() + 550;
+  try {
+    navigator.vibrate?.(action === "got" ? 35 : [18, 40, 18]);
+  } catch {
+    // Some WebViews ignore vibrate.
+  }
+  render();
+}
+
+function advanceGuessWord() {
+  guess.index += 1;
+  if (guess.index >= guess.words.length) {
+    guess.words = shuffleWords(GUESSTURE_WORDS);
+    guess.index = 0;
+  }
+  guess.phase = "play";
+  guess.flash = "";
+  guessGate = createTiltGate();
+  render();
+}
+
+function onGuessTilt(beta) {
+  const zone = tiltZone(beta);
+  if (zone === "unknown") return;
+  guess.sensor = true;
+  guess.tilt = zone;
+  if (guess.phase === "play") {
+    const action = guessGate.feed(zone);
+    if (action) applyGuessAction(action);
+  }
+}
+
+function onGuessOrient(event) {
+  if (view !== "guess") return;
+  onGuessTilt(event.beta);
+}
+
+function onGuessMotion(event) {
+  if (view !== "guess" || guess.sensor) return;
+  const beta = betaFromGravity(event.accelerationIncludingGravity);
+  if (beta == null) return;
+  onGuessTilt(beta);
+}
+
+async function listenGuessSensors() {
+  if (guessListening) return;
+  try {
+    if (typeof DeviceOrientationEvent?.requestPermission === "function") {
+      await DeviceOrientationEvent.requestPermission();
+    }
+  } catch {
+    // Android WebView does not need this; iOS might deny it.
+  }
+  if (guessListening) return;
+  guessListening = true;
+  window.addEventListener("deviceorientation", onGuessOrient);
+  window.addEventListener("devicemotion", onGuessMotion);
+}
+
+function unlistenGuessSensors() {
+  if (!guessListening) return;
+  guessListening = false;
+  window.removeEventListener("deviceorientation", onGuessOrient);
+  window.removeEventListener("devicemotion", onGuessMotion);
+}
+
+async function holdGuessScreen() {
+  try {
+    guessWake = await navigator.wakeLock?.request("screen");
+  } catch {
+    guessWake = null;
+  }
+}
+
+function releaseGuessScreen() {
+  try {
+    guessWake?.release?.();
+  } catch {
+    // Wake lock can already be gone.
+  }
+  guessWake = null;
 }
 
 function renderBuildCards() {
@@ -690,6 +982,7 @@ function render() {
     result: renderResult,
     album: renderAlbum,
     line: renderLine,
+    guess: renderGuess,
     settings: renderSettings,
   };
   app.innerHTML = (screens[view] || renderMap)();
@@ -833,11 +1126,19 @@ function bind() {
   });
   app.querySelectorAll("[data-game]").forEach((el) =>
     el.addEventListener("click", () => {
+      if (el.dataset.game === "act") {
+        openGuess();
+        return;
+      }
       game.kind = el.dataset.game;
       game.index = Math.floor(Math.random() * 20);
       render();
     })
   );
+  app.querySelector("#guess-start")?.addEventListener("click", startGuessRound);
+  app.querySelector("#guess-end")?.addEventListener("click", endGuessRound);
+  app.querySelector("#guess-got")?.addEventListener("click", () => applyGuessAction("got"));
+  app.querySelector("#guess-pass")?.addEventListener("click", () => applyGuessAction("pass"));
   app.querySelector("#next-game")?.addEventListener("click", () => {
     game.index += 1;
     render();

@@ -489,6 +489,10 @@ export const TRAIL = {
 };
 
 export const GAMES = {
+  act: {
+    title: "Forehead acting",
+    blurb: "Phone on your head. Kids act. You guess.",
+  },
   spy: {
     title: "I Spy",
     blurb: "One person spies. Everyone else hunts.",
